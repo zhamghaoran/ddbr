@@ -8,6 +8,7 @@ require (
 	github.com/cloudwego/gopkg v0.1.3
 	github.com/cloudwego/kitex v0.12.1
 	github.com/cloudwego/kitex/pkg/protocol/bthrift v0.0.0-20250212064021-6dbce3da0f9a
+	github.com/google/uuid v1.1.2
 )
 
 require (

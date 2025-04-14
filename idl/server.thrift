@@ -23,10 +23,17 @@ struct AppendEntriesReq {
 struct AppendEntriesResp {
     1: i64 term
     2: bool success
+}
+struct HeartbeatReq {
+
+}
+struct Heartbeatresp{
+    1: list<string> Peers
     255: common.Common common
 }
 service Server {
     RequestVoteResp requestVote(1: RequestVoteReq req)
     AppendEntriesResp appendEntries(1:AppendEntriesReq req)
+    Heartbeatresp heartBeat(1:HeartbeatReq req)
 }
 // kitex -module zhamghaoran/ddbr-server -service zhamghaoran/ddbr-server  ..\idl\server.thrift
