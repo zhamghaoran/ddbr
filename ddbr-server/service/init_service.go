@@ -2,12 +2,13 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"zhamghaoran/ddbr-server/log"
 )
 
 // RaftConfig 表示Raft节点配置
@@ -65,6 +66,11 @@ func (im *InitManager) LoadConfig(configPath string) error {
 	im.dataPath = config.DataDir
 	return nil
 }
+func (im *InitManager) ModifyServerHost(serverHost []string) {
+	im.mu.Lock()
+	defer im.mu.Unlock()
+	im.config.Peers = serverHost
+}
 
 // InitializeRaftState 初始化Raft状态
 func (im *InitManager) InitializeRaftState() error {
@@ -90,14 +96,14 @@ func (im *InitManager) InitializeRaftState() error {
 		raftState.nodeId = im.config.NodeId
 	}
 
-	// 确保数据目录存在
-	if err := os.MkdirAll(im.config.DataDir, 0755); err != nil {
-		return fmt.Errorf("failed to create data directory: %v", err)
-	}
+	//// 确保数据目录存在
+	//if err := os.MkdirAll(im.config.DataDir, 0755); err != nil {
+	//	return fmt.Errorf("failed to create data directory: %v", err)
+	//}
 
 	// 尝试从持久化存储恢复状态
 	if err := im.recoverFromStorage(); err != nil {
-		log.Printf("No persistent state found or error loading: %v, starting fresh", err)
+		log.Log.Infof("No persistent state found or error loading: %v, starting fresh", err)
 	}
 
 	im.isInit = true
@@ -110,6 +116,9 @@ func (im *InitManager) recoverFromStorage() error {
 
 	data, err := ioutil.ReadFile(statePath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
 		return err
 	}
 
@@ -194,7 +203,11 @@ func InitializeResources(configPath string) error {
 	if err := im.InitializeRaftState(); err != nil {
 		return fmt.Errorf("failed to initialize Raft state: %v", err)
 	}
-
-	log.Printf("Raft node initialized with ID: %d", raftState.nodeId)
+	//gatewayClient := client.GetGatewayClient()
+	////todo  config
+	//gatewayClient.RegisterSever(context.Background(), &gateway.RegisterSeverReq{
+	//	ServerHost: "",
+	//})
+	log.Log.Info("raft state initialized")
 	return nil
 }

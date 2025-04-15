@@ -7,7 +7,7 @@ include "client.thrift"
 struct SetRequest {
     1: string key,
     2: string val
-    3: common.Password password
+    255: common.Password password
 }
 
 struct SetResponse {
@@ -21,13 +21,14 @@ struct GetRequest {
 
 struct GetResponse {
     1: string val,
-    2: common.Common common
+    255: common.Common common
 }
 struct RegisterSeverReq {
     1: string serverHost
 }
 struct RegisterSeverResp {
-    
+    1: string leaderHost
+    2: list<string> severHostSever
 }
 struct RegisterGatewayResp {
     1: GatewayBasicInfo info
@@ -40,6 +41,7 @@ struct RegisterGatewayReq {
 
 }
 struct SetLeaderResp {
+    1: list<string> severHostSever
 
 }
 struct SetLeaderReq {
@@ -53,4 +55,4 @@ service Gateway {
     SetLeaderResp SetLeader(1: SetLeaderReq req)
 
 }
-// kitex -module zhamghaoran/ddbr-gateway -service zhamghaoran/ddbr-gateway  ..\idl\gateway.thrift
+// kitex -module zhamghaoran/ddbr-gateway -thrift frugal_tag=false -service zhamghaoran/ddbr-gateway  ..\idl\gateway.thrift

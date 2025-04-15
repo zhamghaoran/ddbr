@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
 	"github.com/cloudwego/kitex/server"
 	"log"
 	"net"
@@ -14,12 +15,14 @@ import (
 func main() {
 	args := os.Args[1:]
 	err := infra.ParseConfig(args)
-	err = service.CmdService(args)
+	err = service.CmdService()
 	if err != nil {
 		panic(err)
 	}
 	addr, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:"+infra.Getport())
-	svr := gateway.NewServer(new(GatewayImpl), server.WithMiddleware(middware.AuthorityMiddleware), server.WithServiceAddr(addr))
+	code := thrift.NewThriftCodecWithConfig(thrift.FrugalRead | thrift.FrugalWrite)
+	svr := gateway.NewServer(new(GatewayImpl), server.WithMiddleware(middware.AuthorityMiddleware), server.WithServiceAddr(addr),
+		server.WithPayloadCodec(code))
 	err = svr.Run()
 	if err != nil {
 		log.Println(err.Error())

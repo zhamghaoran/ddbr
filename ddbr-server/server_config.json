@@ -1,0 +1,6 @@
+{
+  "election_timeout": 1000,
+  "heartbeat_period": 500,
+  "data_dir": "/data/raft/data",
+  "snapshot_count": 1000
+}

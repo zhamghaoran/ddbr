@@ -9,10 +9,10 @@ import (
 )
 
 type RequestVoteReq struct {
-	Term         int64 `thrift:"term,1" frugal:"1,default,i64" json:"term"`
-	CandidateId  int64 `thrift:"candidateId,2" frugal:"2,default,i64" json:"candidateId"`
-	LastLogIndex int64 `thrift:"lastLogIndex,3" frugal:"3,default,i64" json:"lastLogIndex"`
-	LastLogTerm  int64 `thrift:"lastLogTerm,4" frugal:"4,default,i64" json:"lastLogTerm"`
+	Term         int64 `thrift:"term,1" json:"term"`
+	CandidateId  int64 `thrift:"candidateId,2" json:"candidateId"`
+	LastLogIndex int64 `thrift:"lastLogIndex,3" json:"lastLogIndex"`
+	LastLogTerm  int64 `thrift:"lastLogTerm,4" json:"lastLogTerm"`
 }
 
 func NewRequestVoteReq() *RequestVoteReq {
@@ -65,9 +65,9 @@ var fieldIDToName_RequestVoteReq = map[int16]string{
 }
 
 type RequestVoteResp struct {
-	Term        int64          `thrift:"term,1" frugal:"1,default,i64" json:"term"`
-	VoteGranted bool           `thrift:"voteGranted,2" frugal:"2,default,bool" json:"voteGranted"`
-	Common      *common.Common `thrift:"common,3" frugal:"3,default,common.Common" json:"common"`
+	Term        int64          `thrift:"term,1" json:"term"`
+	VoteGranted bool           `thrift:"voteGranted,2" json:"voteGranted"`
+	Common      *common.Common `thrift:"common,3" json:"common"`
 }
 
 func NewRequestVoteResp() *RequestVoteResp {
@@ -121,12 +121,12 @@ var fieldIDToName_RequestVoteResp = map[int16]string{
 }
 
 type AppendEntriesReq struct {
-	Term         int64    `thrift:"term,1" frugal:"1,default,i64" json:"term"`
-	LeaderId     int64    `thrift:"leaderId,2" frugal:"2,default,i64" json:"leaderId"`
-	PrevLogIndex int64    `thrift:"prevLogIndex,3" frugal:"3,default,i64" json:"prevLogIndex"`
-	PrevLogTerm  int64    `thrift:"prevLogTerm,4" frugal:"4,default,i64" json:"prevLogTerm"`
-	Entries      []string `thrift:"entries,5" frugal:"5,default,list<string>" json:"entries"`
-	LeaderCommit int64    `thrift:"leaderCommit,6" frugal:"6,default,i64" json:"leaderCommit"`
+	Term         int64    `thrift:"term,1" json:"term"`
+	LeaderId     int64    `thrift:"leaderId,2" json:"leaderId"`
+	PrevLogIndex int64    `thrift:"prevLogIndex,3" json:"prevLogIndex"`
+	PrevLogTerm  int64    `thrift:"prevLogTerm,4" json:"prevLogTerm"`
+	Entries      []string `thrift:"entries,5" json:"entries"`
+	LeaderCommit int64    `thrift:"leaderCommit,6" json:"leaderCommit"`
 }
 
 func NewAppendEntriesReq() *AppendEntriesReq {
@@ -195,8 +195,8 @@ var fieldIDToName_AppendEntriesReq = map[int16]string{
 }
 
 type AppendEntriesResp struct {
-	Term    int64 `thrift:"term,1" frugal:"1,default,i64" json:"term"`
-	Success bool  `thrift:"success,2" frugal:"2,default,bool" json:"success"`
+	Term    int64 `thrift:"term,1" json:"term"`
+	Success bool  `thrift:"success,2" json:"success"`
 }
 
 func NewAppendEntriesResp() *AppendEntriesResp {
@@ -252,8 +252,8 @@ func (p *HeartbeatReq) String() string {
 var fieldIDToName_HeartbeatReq = map[int16]string{}
 
 type Heartbeatresp struct {
-	Peers  []string       `thrift:"Peers,1" frugal:"1,default,list<string>" json:"Peers"`
-	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+	Peers  []string       `thrift:"Peers,1" json:"Peers"`
+	Common *common.Common `thrift:"common,255" json:"common"`
 }
 
 func NewHeartbeatresp() *Heartbeatresp {
@@ -307,7 +307,7 @@ type Server interface {
 }
 
 type ServerRequestVoteArgs struct {
-	Req *RequestVoteReq `thrift:"req,1" frugal:"1,default,RequestVoteReq" json:"req"`
+	Req *RequestVoteReq `thrift:"req,1" json:"req"`
 }
 
 func NewServerRequestVoteArgs() *ServerRequestVoteArgs {
@@ -345,7 +345,7 @@ var fieldIDToName_ServerRequestVoteArgs = map[int16]string{
 }
 
 type ServerRequestVoteResult struct {
-	Success *RequestVoteResp `thrift:"success,0,optional" frugal:"0,optional,RequestVoteResp" json:"success,omitempty"`
+	Success *RequestVoteResp `thrift:"success,0,optional" json:"success,omitempty"`
 }
 
 func NewServerRequestVoteResult() *ServerRequestVoteResult {
@@ -383,7 +383,7 @@ var fieldIDToName_ServerRequestVoteResult = map[int16]string{
 }
 
 type ServerAppendEntriesArgs struct {
-	Req *AppendEntriesReq `thrift:"req,1" frugal:"1,default,AppendEntriesReq" json:"req"`
+	Req *AppendEntriesReq `thrift:"req,1" json:"req"`
 }
 
 func NewServerAppendEntriesArgs() *ServerAppendEntriesArgs {
@@ -421,7 +421,7 @@ var fieldIDToName_ServerAppendEntriesArgs = map[int16]string{
 }
 
 type ServerAppendEntriesResult struct {
-	Success *AppendEntriesResp `thrift:"success,0,optional" frugal:"0,optional,AppendEntriesResp" json:"success,omitempty"`
+	Success *AppendEntriesResp `thrift:"success,0,optional" json:"success,omitempty"`
 }
 
 func NewServerAppendEntriesResult() *ServerAppendEntriesResult {
@@ -459,7 +459,7 @@ var fieldIDToName_ServerAppendEntriesResult = map[int16]string{
 }
 
 type ServerHeartBeatArgs struct {
-	Req *HeartbeatReq `thrift:"req,1" frugal:"1,default,HeartbeatReq" json:"req"`
+	Req *HeartbeatReq `thrift:"req,1" json:"req"`
 }
 
 func NewServerHeartBeatArgs() *ServerHeartBeatArgs {
@@ -497,7 +497,7 @@ var fieldIDToName_ServerHeartBeatArgs = map[int16]string{
 }
 
 type ServerHeartBeatResult struct {
-	Success *Heartbeatresp `thrift:"success,0,optional" frugal:"0,optional,Heartbeatresp" json:"success,omitempty"`
+	Success *Heartbeatresp `thrift:"success,0,optional" json:"success,omitempty"`
 }
 
 func NewServerHeartBeatResult() *ServerHeartBeatResult {

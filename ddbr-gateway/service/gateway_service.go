@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
+	"github.com/cloudwego/kitex/transport"
 	"zhamghaoran/ddbr-gateway/infra"
 	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway"
 	clientgateway "zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway/gateway"
@@ -11,7 +13,9 @@ import (
 )
 
 func GetGatewayInfoFromMaster(config *infra.CmdConfig) error {
-	MasterGatewayClient := clientgateway.MustNewClient("gateway", client.WithHostPorts(config.MasterGatewayHost))
+	MasterGatewayClient := clientgateway.MustNewClient("gateway", client.WithHostPorts(config.MasterGatewayHost), client.WithPayloadCodec(
+		thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite),
+	), client.WithTransportProtocol(transport.Framed))
 	resp, err := MasterGatewayClient.RegisterGateway(
 		context.Background(),
 		&gateway.RegisterGatewayReq{},
@@ -44,5 +48,6 @@ func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway
 func SetLeader(ctx context.Context, req *gateway.SetLeaderReq) (*gateway.SetLeaderResp, error) {
 	resp := &gateway.SetLeaderResp{}
 	repo.SetLeader(req.LeaderHost)
+	resp.SeverHostSever = repo.GetSeverList()
 	return resp, nil
 }

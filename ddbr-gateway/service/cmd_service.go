@@ -8,7 +8,7 @@ import (
 	"zhamghaoran/ddbr-gateway/repo"
 )
 
-func CmdService(args []string) error {
+func CmdService() error {
 	config := infra.GetConfig()
 	if config.MasterGatewayHost != infra.Master {
 		// 从master 节点拉取配置
