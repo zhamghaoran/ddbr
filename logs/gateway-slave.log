@@ -1,0 +1,9 @@
+WARNING:(ast) sonic only supports go1.17~1.23, but your environment is not suitable
+password is :413121940563
+2025/04/15 17:56:51.722265 cmd_service.go:15: [Error] rpc call gateway master error : remote or network error[remote]: decode failed, codec msg type not match with thriftCodec
+2025/04/15 17:56:51.722359 main.go:17: [Error] getGatewayInfoFromMaster error: remote or network error[remote]: decode failed, codec msg type not match with thriftCodec
+panic: remote or network error[remote]: decode failed, codec msg type not match with thriftCodec
+
+goroutine 1 [running]:
+main.main()
+	/Users/construct/project/ddbr/ddbr-gateway/main.go:19 +0x20c
