@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"zhamghaoran/ddbr-server/client"
+	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway"
 	"zhamghaoran/ddbr-server/log"
 )
 
@@ -20,6 +23,7 @@ type RaftConfig struct {
 	HeartbeatPeriod int      `json:"heartbeat_period"` // 心跳周期（毫秒）
 	DataDir         string   `json:"data_dir"`         // 数据目录
 	SnapshotCount   int64    `json:"snapshot_count"`   // 触发快照的日志条目数
+	Port            string   `json:"port"`             // 服务端口号
 }
 
 // InitManager 初始化管理器
@@ -35,6 +39,12 @@ var (
 	initManager     *InitManager
 	initManagerOnce sync.Once
 )
+
+func GetServerConfig() RaftConfig {
+	manager := GetInitManager()
+	config := manager.config
+	return *config
+}
 
 // GetInitManager 获取初始化管理器实例
 func GetInitManager() *InitManager {
@@ -203,11 +213,11 @@ func InitializeResources(configPath string) error {
 	if err := im.InitializeRaftState(); err != nil {
 		return fmt.Errorf("failed to initialize Raft state: %v", err)
 	}
-	//gatewayClient := client.GetGatewayClient()
+	gatewayClient := client.GetGatewayClient()
 	////todo  config
-	//gatewayClient.RegisterSever(context.Background(), &gateway.RegisterSeverReq{
-	//	ServerHost: "",
-	//})
+	gatewayClient.RegisterSever(context.Background(), &gateway.RegisterSeverReq{
+		ServerHost: "",
+	})
 	log.Log.Info("raft state initialized")
 	return nil
 }
