@@ -55,4 +55,4 @@ service Gateway {
     SetLeaderResp SetLeader(1: SetLeaderReq req)
 
 }
-// kitex -module zhamghaoran/ddbr-gateway -thrift frugal_tag=false -service zhamghaoran/ddbr-gateway  ..\idl\gateway.thrift
+// kitex -module zhamghaoran/ddbr-gateway  -service zhamghaoran/ddbr-gateway  ..\idl\gateway.thrift

@@ -2,36 +2,9 @@ package service
 
 import (
 	"context"
-	"sync"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
-
-	"github.com/google/uuid"
 )
-
-// RaftState 表示Raft节点的状态
-type RaftState struct {
-	mu          sync.Mutex // 用于保护并发访问
-	currentTerm int64      // 当前任期
-	votedFor    int64      // 当前任期投票给的候选人ID，如果没有则为-1
-	logs        []LogEntry // 日志条目
-	nodeId      int64      // 当前节点ID
-}
-
-// LogEntry 表示日志条目
-type LogEntry struct {
-	Term    int64  // 写入该日志时的任期
-	Index   int64  // 日志索引
-	Command string // 日志命令内容
-}
-
-// 全局Raft状态实例
-var raftState = &RaftState{
-	currentTerm: 0,
-	votedFor:    -1,
-	logs:        []LogEntry{},
-	nodeId:      int64(uuid.New().ID()), // 默认节点ID，实际使用时应该从配置中读取
-}
 
 func RequestVote(ctx context.Context, req *sever.RequestVoteReq) (resp *sever.RequestVoteResp, err error) {
 	resp = sever.NewRequestVoteResp()
@@ -39,6 +12,9 @@ func RequestVote(ctx context.Context, req *sever.RequestVoteReq) (resp *sever.Re
 		RespCode: 0,
 		Message:  "success",
 	}
+
+	// 获取Raft状态
+	raftState := GetRaftState()
 
 	// 加锁保护并发访问
 	raftState.mu.Lock()

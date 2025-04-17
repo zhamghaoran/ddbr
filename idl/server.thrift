@@ -36,4 +36,4 @@ service Server {
     AppendEntriesResp appendEntries(1:AppendEntriesReq req)
     Heartbeatresp heartBeat(1:HeartbeatReq req)
 }
-// kitex -module zhamghaoran/ddbr-server  -thrift frugal_tag=false -service zhamghaoran/ddbr-server  ..\idl\server.thrift
+// kitex -module zhamghaoran/ddbr-server  -service zhamghaoran/ddbr-server  ..\idl\server.thrift

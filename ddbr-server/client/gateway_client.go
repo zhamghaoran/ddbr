@@ -5,17 +5,21 @@ import (
 	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
 	"github.com/cloudwego/kitex/transport"
 	"sync"
+	"zhamghaoran/ddbr-server/constant"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway/gateway"
 )
 
 var gatewayClient gateway.Client
 
 func GetGatewayClient() gateway.Client {
-	sync.OnceFunc(createGatewayClient)
+	onceFunc := sync.OnceFunc(createGatewayClient)
+	onceFunc()
 	return gatewayClient
 }
 func createGatewayClient() {
-	gatewayClient = gateway.MustNewClient("gateway", client.WithHostPorts("0.0.0.0"), client.WithPayloadCodec(
-		thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite),
-	), client.WithTransportProtocol(transport.Framed))
+	gatewayClient = gateway.MustNewClient("gateway",
+		//client.WithDestService(constant.GATEWAY_SERVER_ADDRESS),
+		client.WithHostPorts(constant.GatewayServerAddress),
+		client.WithPayloadCodec(thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite)),
+		client.WithTransportProtocol(transport.Framed))
 }

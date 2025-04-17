@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
-	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
-	"github.com/cloudwego/kitex/pkg/utils/kitexutil"
-	"github.com/cloudwego/kitex/transport"
 	"zhamghaoran/ddbr-gateway/infra"
 	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway"
 	clientgateway "zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway/gateway"
 	"zhamghaoran/ddbr-gateway/log"
 	"zhamghaoran/ddbr-gateway/repo"
+	"zhamghaoran/ddbr-gateway/util"
+
+	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
+	"github.com/cloudwego/kitex/transport"
 )
 
 func GetGatewayInfoFromMaster(config *infra.CmdConfig) error {
@@ -36,15 +37,22 @@ func GetGatewayInfoFromMaster(config *infra.CmdConfig) error {
 }
 func RegisterGatewayService(ctx context.Context, req *gateway.RegisterGatewayReq) (*gateway.RegisterGatewayResp, error) {
 	log.Log.CtxInfof(ctx, "req is :%v", req)
-	cluster, _ := kitexutil.GetCallerAddr(ctx)
-	log.Log.CtxInfof(ctx, "remote server host is %s", cluster.String())
+	host, err := util.GetRemoteHost(ctx)
+	if err != nil {
+		return nil, err
+	}
+	repo.AddGatewayHost(host)
 	resp := &gateway.RegisterGatewayResp{
 		Info: &repo.GatewayBasicInfo,
 	}
 	return resp, nil
 }
 func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway.RegisterSeverResp, error) {
-	repo.AddServer(req.ServerHost)
+	host, err := util.GetRemoteHost(ctx)
+	if err != nil {
+		return nil, err
+	}
+	repo.AddServer(host)
 	resp := &gateway.RegisterSeverResp{}
 	return resp, nil
 }
