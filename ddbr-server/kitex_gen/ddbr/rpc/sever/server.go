@@ -336,6 +336,156 @@ func (p *JoinClusterResp) String() string {
 
 var fieldIDToName_JoinClusterResp = map[int16]string{}
 
+type LogSyncReq struct {
+	NodeId       int64 `thrift:"nodeId,1" frugal:"1,default,i64" json:"nodeId"`
+	LastLogIndex int64 `thrift:"lastLogIndex,2" frugal:"2,default,i64" json:"lastLogIndex"`
+	LastLogTerm  int64 `thrift:"lastLogTerm,3" frugal:"3,default,i64" json:"lastLogTerm"`
+}
+
+func NewLogSyncReq() *LogSyncReq {
+	return &LogSyncReq{}
+}
+
+func (p *LogSyncReq) InitDefault() {
+}
+
+func (p *LogSyncReq) GetNodeId() (v int64) {
+	return p.NodeId
+}
+
+func (p *LogSyncReq) GetLastLogIndex() (v int64) {
+	return p.LastLogIndex
+}
+
+func (p *LogSyncReq) GetLastLogTerm() (v int64) {
+	return p.LastLogTerm
+}
+func (p *LogSyncReq) SetNodeId(val int64) {
+	p.NodeId = val
+}
+func (p *LogSyncReq) SetLastLogIndex(val int64) {
+	p.LastLogIndex = val
+}
+func (p *LogSyncReq) SetLastLogTerm(val int64) {
+	p.LastLogTerm = val
+}
+
+func (p *LogSyncReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("LogSyncReq(%+v)", *p)
+}
+
+var fieldIDToName_LogSyncReq = map[int16]string{
+	1: "nodeId",
+	2: "lastLogIndex",
+	3: "lastLogTerm",
+}
+
+type LogSyncResp struct {
+	Success  bool        `thrift:"success,1" frugal:"1,default,bool" json:"success"`
+	Message  string      `thrift:"message,2" frugal:"2,default,string" json:"message"`
+	Entries  []*LogEntry `thrift:"entries,3" frugal:"3,default,list<LogEntry>" json:"entries"`
+	LeaderId int64       `thrift:"leaderId,4" frugal:"4,default,i64" json:"leaderId"`
+}
+
+func NewLogSyncResp() *LogSyncResp {
+	return &LogSyncResp{}
+}
+
+func (p *LogSyncResp) InitDefault() {
+}
+
+func (p *LogSyncResp) GetSuccess() (v bool) {
+	return p.Success
+}
+
+func (p *LogSyncResp) GetMessage() (v string) {
+	return p.Message
+}
+
+func (p *LogSyncResp) GetEntries() (v []*LogEntry) {
+	return p.Entries
+}
+
+func (p *LogSyncResp) GetLeaderId() (v int64) {
+	return p.LeaderId
+}
+func (p *LogSyncResp) SetSuccess(val bool) {
+	p.Success = val
+}
+func (p *LogSyncResp) SetMessage(val string) {
+	p.Message = val
+}
+func (p *LogSyncResp) SetEntries(val []*LogEntry) {
+	p.Entries = val
+}
+func (p *LogSyncResp) SetLeaderId(val int64) {
+	p.LeaderId = val
+}
+
+func (p *LogSyncResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("LogSyncResp(%+v)", *p)
+}
+
+var fieldIDToName_LogSyncResp = map[int16]string{
+	1: "success",
+	2: "message",
+	3: "entries",
+	4: "leaderId",
+}
+
+type LogEntry struct {
+	Term    int64  `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	Index   int64  `thrift:"index,2" frugal:"2,default,i64" json:"index"`
+	Command string `thrift:"command,3" frugal:"3,default,string" json:"command"`
+}
+
+func NewLogEntry() *LogEntry {
+	return &LogEntry{}
+}
+
+func (p *LogEntry) InitDefault() {
+}
+
+func (p *LogEntry) GetTerm() (v int64) {
+	return p.Term
+}
+
+func (p *LogEntry) GetIndex() (v int64) {
+	return p.Index
+}
+
+func (p *LogEntry) GetCommand() (v string) {
+	return p.Command
+}
+func (p *LogEntry) SetTerm(val int64) {
+	p.Term = val
+}
+func (p *LogEntry) SetIndex(val int64) {
+	p.Index = val
+}
+func (p *LogEntry) SetCommand(val string) {
+	p.Command = val
+}
+
+func (p *LogEntry) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("LogEntry(%+v)", *p)
+}
+
+var fieldIDToName_LogEntry = map[int16]string{
+	1: "term",
+	2: "index",
+	3: "command",
+}
+
 type Server interface {
 	RequestVote(ctx context.Context, req *RequestVoteReq) (r *RequestVoteResp, err error)
 
@@ -344,6 +494,8 @@ type Server interface {
 	HeartBeat(ctx context.Context, req *HeartbeatReq) (r *Heartbeatresp, err error)
 
 	JoinCluster(ctx context.Context, req *JoinClusterReq) (r *JoinClusterResp, err error)
+
+	SyncLogs(ctx context.Context, req *LogSyncReq) (r *LogSyncResp, err error)
 }
 
 type ServerRequestVoteArgs struct {
@@ -647,5 +799,81 @@ func (p *ServerJoinClusterResult) String() string {
 }
 
 var fieldIDToName_ServerJoinClusterResult = map[int16]string{
+	0: "success",
+}
+
+type ServerSyncLogsArgs struct {
+	Req *LogSyncReq `thrift:"req,1" frugal:"1,default,LogSyncReq" json:"req"`
+}
+
+func NewServerSyncLogsArgs() *ServerSyncLogsArgs {
+	return &ServerSyncLogsArgs{}
+}
+
+func (p *ServerSyncLogsArgs) InitDefault() {
+}
+
+var ServerSyncLogsArgs_Req_DEFAULT *LogSyncReq
+
+func (p *ServerSyncLogsArgs) GetReq() (v *LogSyncReq) {
+	if !p.IsSetReq() {
+		return ServerSyncLogsArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *ServerSyncLogsArgs) SetReq(val *LogSyncReq) {
+	p.Req = val
+}
+
+func (p *ServerSyncLogsArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ServerSyncLogsArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerSyncLogsArgs(%+v)", *p)
+}
+
+var fieldIDToName_ServerSyncLogsArgs = map[int16]string{
+	1: "req",
+}
+
+type ServerSyncLogsResult struct {
+	Success *LogSyncResp `thrift:"success,0,optional" frugal:"0,optional,LogSyncResp" json:"success,omitempty"`
+}
+
+func NewServerSyncLogsResult() *ServerSyncLogsResult {
+	return &ServerSyncLogsResult{}
+}
+
+func (p *ServerSyncLogsResult) InitDefault() {
+}
+
+var ServerSyncLogsResult_Success_DEFAULT *LogSyncResp
+
+func (p *ServerSyncLogsResult) GetSuccess() (v *LogSyncResp) {
+	if !p.IsSetSuccess() {
+		return ServerSyncLogsResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *ServerSyncLogsResult) SetSuccess(x interface{}) {
+	p.Success = x.(*LogSyncResp)
+}
+
+func (p *ServerSyncLogsResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ServerSyncLogsResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerSyncLogsResult(%+v)", *p)
+}
+
+var fieldIDToName_ServerSyncLogsResult = map[int16]string{
 	0: "success",
 }

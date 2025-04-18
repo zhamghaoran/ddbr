@@ -5,6 +5,7 @@ go 1.23
 replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
 
 require (
+	github.com/apache/thrift v0.0.0-00010101000000-000000000000
 	github.com/cloudwego/gopkg v0.1.3
 	github.com/cloudwego/kitex v0.12.1
 	github.com/google/uuid v1.1.2

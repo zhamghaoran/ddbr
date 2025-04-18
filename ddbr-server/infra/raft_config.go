@@ -2,7 +2,7 @@ package infra
 
 // RaftConfig 表示Raft节点配置
 type RaftConfig struct {
-	NodeId          int64    `json:"node_id"`          // 节点ID
+	NodeId          *int64   `json:"node_id"`          // 节点ID
 	ClusterId       int64    `json:"cluster_id"`       // 集群ID
 	Peers           []string `json:"peers"`            // 集群中所有节点的地址
 	ElectionTimeout int      `json:"election_timeout"` // 选举超时时间（毫秒）

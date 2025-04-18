@@ -41,6 +41,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
+	"syncLogs": kitex.NewMethodInfo(
+		syncLogsHandler,
+		newServerSyncLogsArgs,
+		newServerSyncLogsResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
 }
 
 var (
@@ -179,6 +186,24 @@ func newServerJoinClusterResult() interface{} {
 	return sever.NewServerJoinClusterResult()
 }
 
+func syncLogsHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*sever.ServerSyncLogsArgs)
+	realResult := result.(*sever.ServerSyncLogsResult)
+	success, err := handler.(sever.Server).SyncLogs(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newServerSyncLogsArgs() interface{} {
+	return sever.NewServerSyncLogsArgs()
+}
+
+func newServerSyncLogsResult() interface{} {
+	return sever.NewServerSyncLogsResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -224,6 +249,16 @@ func (p *kClient) JoinCluster(ctx context.Context, req *sever.JoinClusterReq) (r
 	_args.Req = req
 	var _result sever.ServerJoinClusterResult
 	if err = p.c.Call(ctx, "joinCluster", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SyncLogs(ctx context.Context, req *sever.LogSyncReq) (r *sever.LogSyncResp, err error) {
+	var _args sever.ServerSyncLogsArgs
+	_args.Req = req
+	var _result sever.ServerSyncLogsResult
+	if err = p.c.Call(ctx, "syncLogs", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

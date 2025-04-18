@@ -17,9 +17,9 @@ func GetGatewayClient() gateway.Client {
 	onceFunc()
 	return gatewayClient
 }
-func GetMasterClient(masterHost string) server.Client {
+func GetLeaderClient(leaderHost string) server.Client {
 	serverClient := server.MustNewClient("server",
-		client.WithHostPorts(masterHost+":8080"),
+		client.WithHostPorts(leaderHost+":8080"),
 		client.WithPayloadCodec(thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite)),
 		client.WithTransportProtocol(transport.Framed))
 	return serverClient

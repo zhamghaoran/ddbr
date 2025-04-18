@@ -198,6 +198,8 @@ var fieldIDToName_GetResponse = map[int16]string{
 
 type RegisterSeverReq struct {
 	ServerHost string `thrift:"serverHost,1" frugal:"1,default,string" json:"serverHost"`
+	NodeId     int64  `thrift:"nodeId,2" frugal:"2,default,i64" json:"nodeId"`
+	IsNew      bool   `thrift:"isNew,3" frugal:"3,default,bool" json:"isNew"`
 }
 
 func NewRegisterSeverReq() *RegisterSeverReq {
@@ -210,8 +212,22 @@ func (p *RegisterSeverReq) InitDefault() {
 func (p *RegisterSeverReq) GetServerHost() (v string) {
 	return p.ServerHost
 }
+
+func (p *RegisterSeverReq) GetNodeId() (v int64) {
+	return p.NodeId
+}
+
+func (p *RegisterSeverReq) GetIsNew() (v bool) {
+	return p.IsNew
+}
 func (p *RegisterSeverReq) SetServerHost(val string) {
 	p.ServerHost = val
+}
+func (p *RegisterSeverReq) SetNodeId(val int64) {
+	p.NodeId = val
+}
+func (p *RegisterSeverReq) SetIsNew(val bool) {
+	p.IsNew = val
 }
 
 func (p *RegisterSeverReq) String() string {
@@ -223,11 +239,15 @@ func (p *RegisterSeverReq) String() string {
 
 var fieldIDToName_RegisterSeverReq = map[int16]string{
 	1: "serverHost",
+	2: "nodeId",
+	3: "isNew",
 }
 
 type RegisterSeverResp struct {
-	LeaderHost     string   `thrift:"leaderHost,1" frugal:"1,default,string" json:"leaderHost"`
-	SeverHostSever []string `thrift:"severHostSever,2" frugal:"2,default,list<string>" json:"severHostSever"`
+	LeaderHost     string         `thrift:"leaderHost,1" frugal:"1,default,string" json:"leaderHost"`
+	SeverHostSever []string       `thrift:"severHostSever,2" frugal:"2,default,list<string>" json:"severHostSever"`
+	LeaderId       int64          `thrift:"leaderId,3" frugal:"3,default,i64" json:"leaderId"`
+	Common         *common.Common `thrift:"common,4" frugal:"4,default,common.Common" json:"common"`
 }
 
 func NewRegisterSeverResp() *RegisterSeverResp {
@@ -244,11 +264,34 @@ func (p *RegisterSeverResp) GetLeaderHost() (v string) {
 func (p *RegisterSeverResp) GetSeverHostSever() (v []string) {
 	return p.SeverHostSever
 }
+
+func (p *RegisterSeverResp) GetLeaderId() (v int64) {
+	return p.LeaderId
+}
+
+var RegisterSeverResp_Common_DEFAULT *common.Common
+
+func (p *RegisterSeverResp) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return RegisterSeverResp_Common_DEFAULT
+	}
+	return p.Common
+}
 func (p *RegisterSeverResp) SetLeaderHost(val string) {
 	p.LeaderHost = val
 }
 func (p *RegisterSeverResp) SetSeverHostSever(val []string) {
 	p.SeverHostSever = val
+}
+func (p *RegisterSeverResp) SetLeaderId(val int64) {
+	p.LeaderId = val
+}
+func (p *RegisterSeverResp) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *RegisterSeverResp) IsSetCommon() bool {
+	return p.Common != nil
 }
 
 func (p *RegisterSeverResp) String() string {
@@ -261,6 +304,8 @@ func (p *RegisterSeverResp) String() string {
 var fieldIDToName_RegisterSeverResp = map[int16]string{
 	1: "leaderHost",
 	2: "severHostSever",
+	3: "leaderId",
+	4: "common",
 }
 
 type RegisterGatewayResp struct {

@@ -25,10 +25,14 @@ struct GetResponse {
 }
 struct RegisterSeverReq {
     1: string serverHost
+    2: i64 nodeId
+    3: bool isNew
 }
 struct RegisterSeverResp {
     1: string leaderHost
     2: list<string> severHostSever
+    3: i64 leaderId
+    4: common.Common common
 }
 struct RegisterGatewayResp {
     1: GatewayBasicInfo info
@@ -48,7 +52,7 @@ struct SetLeaderReq {
 service Gateway {
     SetResponse Set(1: SetRequest req),
     GetResponse Get(1: GetRequest req),
-    RegisterSeverResp RegisterSever(1:  RegisterSeverReq req)
+    RegisterSeverResp RegisterSever(1: RegisterSeverReq req)
     RegisterGatewayResp RegisterGateway(1: RegisterGatewayReq req)
     SetLeaderResp SetLeader(1: SetLeaderReq req)
 

@@ -37,11 +37,31 @@ struct JoinClusterReq {
 struct JoinClusterResp {
 
 }
+struct LogSyncReq {
+    1: i64 nodeId
+    2: i64 lastLogIndex
+    3: i64 lastLogTerm
+}
+
+struct LogSyncResp {
+    1: bool success
+    2: string message
+    3: list<LogEntry> entries
+    4: i64 leaderId
+}
+
+struct LogEntry {
+    1: i64 term
+    2: i64 index
+    3: string command
+}
+
 service Server {
     RequestVoteResp requestVote(1: RequestVoteReq req)
-    AppendEntriesResp appendEntries(1:AppendEntriesReq req)
+    AppendEntriesResp appendEntries(1: AppendEntriesReq req)
     Heartbeatresp heartBeat(1:HeartbeatReq req)
     JoinClusterResp joinCluster(1: JoinClusterReq req)
+    LogSyncResp syncLogs(1: LogSyncReq req)
 }
 // kitex -module zhamghaoran/ddbr-server  -service zhamghaoran/ddbr-server  ..\idl\server.thrift
 // kitex -module zhamghaoran/ddbr-server  -service zhamghaoran/ddbr-server  ..\idl\gateway.thrift

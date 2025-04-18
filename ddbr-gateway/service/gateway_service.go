@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"zhamghaoran/ddbr-gateway/infra"
+	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway"
 	clientgateway "zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway/gateway"
 	"zhamghaoran/ddbr-gateway/log"
@@ -47,13 +48,72 @@ func RegisterGatewayService(ctx context.Context, req *gateway.RegisterGatewayReq
 	}
 	return resp, nil
 }
-func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway.RegisterSeverResp, error) {
-	host, err := util.GetRemoteHost(ctx)
-	if err != nil {
-		return nil, err
+
+type GatewayService struct{}
+
+// RegisterSever 节点服务注册
+func (s *GatewayService) RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (resp *gateway.RegisterSeverResp, err error) {
+	resp = gateway.NewRegisterSeverResp()
+	svrRepo := repo.GetSeverRepo()
+
+	// 添加服务器到集群
+	svrRepo.AddSever(req.ServerHost, req.NodeId)
+
+	// 获取当前Leader信息
+	gRepo := repo.GetGatewayRepo()
+	resp.LeaderHost = gRepo.MasterHost
+	resp.LeaderId = gRepo.GetLeaderId()
+
+	// 返回当前集群信息
+	resp.SeverHostSever = svrRepo.GetAllSevers()
+
+	// 如果是新节点，触发日志同步通知
+	if req.IsNew {
+		notifyLeaderForNewNode(req.NodeId, req.ServerHost)
 	}
-	repo.AddServer(host)
-	resp := &gateway.RegisterSeverResp{}
+
+	resp.Common = &common.Common{
+		RespCode: 0,
+		Message:  "register success",
+	}
+
+	log.Log.Infof("Server registered: %s, nodeId: %d", req.ServerHost, req.NodeId)
+	return resp, nil
+}
+
+// notifyLeaderForNewNode 通知Leader有新节点加入
+func notifyLeaderForNewNode(nodeId int64, nodeHost string) {
+	// 获取Leader地址并发送通知
+	// 这里需要根据实际情况实现Leader通知逻辑
+	log.Log.Infof("Notifying leader about new node: %d at %s", nodeId, nodeHost)
+}
+
+func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway.RegisterSeverResp, error) {
+	resp = gateway.NewRegisterSeverResp()
+	svrRepo := repo.GetSeverRepo()
+
+	// 添加服务器到集群
+	svrRepo.AddSever(req.ServerHost, req.NodeId)
+
+	// 获取当前Leader信息
+	gRepo := repo.GetGatewayRepo()
+	resp.LeaderHost = gRepo.MasterHost
+	resp.LeaderId = gRepo.GetLeaderId() // 需要实现这个方法
+
+	// 返回当前集群信息
+	resp.SeverHostSever = svrRepo.GetAllSevers()
+
+	// 如果是新节点，触发日志同步通知
+	if req.IsNew {
+		notifyLeaderForNewNode(req.NodeId, req.ServerHost)
+	}
+
+	resp.Common = &common.Common{
+		RespCode: 0,
+		Message:  "register success",
+	}
+
+	log.Log.Infof("Server registered: %s, nodeId: %d", req.ServerHost, req.NodeId)
 	return resp, nil
 }
 func SetLeader(ctx context.Context, req *gateway.SetLeaderReq) (*gateway.SetLeaderResp, error) {

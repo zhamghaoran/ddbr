@@ -30,3 +30,8 @@ func (s *ServerImpl) JoinCluster(ctx context.Context, req *sever.JoinClusterReq)
 	// TODO: Your code here...
 	return
 }
+
+// SyncLogs implements the ServerImpl interface.
+func (s *ServerImpl) SyncLogs(ctx context.Context, req *sever.LogSyncReq) (resp *sever.LogSyncResp, err error) {
+	return service.SyncLogs(ctx, req)
+}

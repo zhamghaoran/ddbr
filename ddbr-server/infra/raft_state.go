@@ -11,10 +11,10 @@ import (
 
 // RaftState 表示Raft节点的状态
 type RaftState struct {
-	mu          sync.Mutex // 用于保护并发访问
-	currentTerm int64      // 当前任期
-	votedFor    int64      // 当前任期投票给的候选人ID，如果没有则为-1
-	logs        []LogEntry // 日志条目
+	Mu          sync.Mutex // 用于保护并发访问
+	CurrentTerm int64      // 当前任期
+	VotedFor    int64      // 当前任期投票给的候选人ID，如果没有则为-1
+	Logs        []LogEntry // 日志条目
 	nodeId      int64      // 当前节点ID
 }
 
@@ -28,9 +28,9 @@ type LogEntry struct {
 // 全局Raft状态实例
 var (
 	raftState = &RaftState{
-		currentTerm: 0,
-		votedFor:    -1,
-		logs:        []LogEntry{},
+		CurrentTerm: 0,
+		VotedFor:    -1,
+		Logs:        []LogEntry{},
 		nodeId:      int64(uuid.New().ID()), // 默认节点ID，实际使用时应该从配置中读取
 	}
 	raftStateOnce sync.Once
@@ -42,9 +42,9 @@ func GetRaftState() *RaftState {
 		// 确保只初始化一次
 		if raftState == nil {
 			raftState = &RaftState{
-				currentTerm: 0,
-				votedFor:    -1,
-				logs:        []LogEntry{},
+				CurrentTerm: 0,
+				VotedFor:    -1,
+				Logs:        []LogEntry{},
 				nodeId:      int64(uuid.New().ID()),
 			}
 		}
@@ -54,66 +54,66 @@ func GetRaftState() *RaftState {
 
 // GetCurrentTerm 获取当前任期
 func (rs *RaftState) GetCurrentTerm() int64 {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	return rs.currentTerm
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	return rs.CurrentTerm
 }
 
 // SetCurrentTerm 设置当前任期
 func (rs *RaftState) SetCurrentTerm(term int64) {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	rs.currentTerm = term
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	rs.CurrentTerm = term
 }
 
 // GetVotedFor 获取投票对象
 func (rs *RaftState) GetVotedFor() int64 {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	return rs.votedFor
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	return rs.VotedFor
 }
 
 // SetVotedFor 设置投票对象
 func (rs *RaftState) SetVotedFor(candidateId int64) {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	rs.votedFor = candidateId
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	rs.VotedFor = candidateId
 }
 
 // GetLogs 获取日志条目
 func (rs *RaftState) GetLogs() []LogEntry {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	logsCopy := make([]LogEntry, len(rs.logs))
-	copy(logsCopy, rs.logs)
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	logsCopy := make([]LogEntry, len(rs.Logs))
+	copy(logsCopy, rs.Logs)
 	return logsCopy
 }
 
 // SetLogs 设置日志条目
 func (rs *RaftState) SetLogs(logs []LogEntry) {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
-	rs.logs = logs
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	rs.Logs = logs
 }
 
 // GetNodeId 获取节点ID
 func (rs *RaftState) GetNodeId() int64 {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
 	return rs.nodeId
 }
 
 // SetNodeId 设置节点ID
 func (rs *RaftState) SetNodeId(nodeId int64) {
-	rs.mu.Lock()
-	defer rs.mu.Unlock()
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
 	rs.nodeId = nodeId
 }
 func (rs *RaftState) BeginVote() {
 
 }
 func (rs *RaftState) ExpiredTimer(ctx context.Context, masterAddr string, closeCh chan int) {
-	serverClient := client.GetMasterClient(masterAddr)
+	serverClient := client.GetLeaderClient(masterAddr)
 	selfSpinTime := GetServerConfig().ElectionTimeout
 	for {
 		select {
@@ -126,7 +126,6 @@ func (rs *RaftState) ExpiredTimer(ctx context.Context, masterAddr string, closeC
 				return
 			}
 			SetSetPeers(resp.GetPeers())
-			resp.
 		}
 	}
 
