@@ -1,6 +1,0 @@
-WARNING:(ast) sonic only supports go1.17~1.23, but your environment is not suitable
-password is :465271330621
-2025/04/15 17:56:49.052441 server.go:79: [Info] KITEX: server listen at addr=[::]:8080
-2025/04/15 17:56:51.722198 default_server_handler.go:259: [Error] KITEX: processing request error, remoteService=, remoteAddr=127.0.0.1:63234, error=decode failed, codec msg type not match with thriftCodec
-2025/04/15 17:59:26.002645 server_handler.go:384: [Info] KITEX: gRPC GracefulShutdown starts
-2025/04/15 17:59:26.054111 server_handler.go:386: [Info] KITEX: gRPC GracefulShutdown ends

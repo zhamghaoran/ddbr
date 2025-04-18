@@ -59,7 +59,7 @@ func ReplicateLogs(ctx context.Context, newEntry *sever.LogEntry) (int64, error)
 			raftState.Mu.Unlock()
 
 			// 准备发送的日志条目
-			entriesToSend := []*sever.LogEntry{}
+			var entriesToSend []*sever.LogEntry
 
 			// 获取需要发送的日志条目
 			raftState.Mu.Lock()
