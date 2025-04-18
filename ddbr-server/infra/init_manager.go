@@ -72,12 +72,10 @@ func GetInitManager() *InitManager {
 func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	im.mu.Lock()
 	defer im.mu.Unlock()
-
 	// 首先使用configs包加载配置
 	if err := configs.LoadConfig(configPath); err != nil {
 		return err
 	}
-
 	// 获取配置并设置master标志
 	config := configs.GetConfig()
 	config.IsMaster = master
@@ -103,25 +101,20 @@ func (im *InitManager) ModifyServerHost(serverHost []string) {
 func (im *InitManager) InitializeRaftState() error {
 	im.mu.Lock()
 	defer im.mu.Unlock()
-
 	if im.isInit {
 		return nil // 已经初始化
 	}
-
 	raftState := GetRaftState()
-
 	// 设置数据目录
 	if raftState.DataDir == "" {
 		raftState.DataDir = im.dataPath
 	} else {
 		im.dataPath = raftState.DataDir
 	}
-
 	// 尝试从持久化存储恢复状态
 	if err := im.recoverFromStorage(); err != nil {
 		log.Log.Infof("No persistent state found or error loading: %v, starting fresh", err)
 	}
-
 	im.isInit = true
 	return nil
 }
@@ -140,9 +133,9 @@ func (im *InitManager) recoverFromStorage() error {
 	}
 
 	type persistentState struct {
-		CurrentTerm int64      `json:"current_term"`
-		VotedFor    int64      `json:"voted_for"`
-		Logs        []LogEntry `json:"logs"`
+		CurrentTerm int64             `json:"current_term"`
+		VotedFor    int64             `json:"voted_for"`
+		Logs        []*sever.LogEntry `json:"logs"`
 	}
 
 	var state persistentState
@@ -167,9 +160,9 @@ func (im *InitManager) PersistRaftState() error {
 	statePath := filepath.Join(raftState.DataDir, "raft_state.json")
 
 	state := struct {
-		CurrentTerm int64      `json:"current_term"`
-		VotedFor    int64      `json:"voted_for"`
-		Logs        []LogEntry `json:"logs"`
+		CurrentTerm int64             `json:"current_term"`
+		VotedFor    int64             `json:"voted_for"`
+		Logs        []*sever.LogEntry `json:"logs"`
 	}{
 		CurrentTerm: raftState.GetCurrentTerm(),
 		VotedFor:    raftState.GetVotedFor(),
@@ -203,36 +196,30 @@ func (im *InitManager) SetJoinedCluster(joined bool) {
 }
 
 // JoinCluster 加入集群
-func (im *InitManager) JoinCluster(ctx context.Context) error {
+func (im *InitManager) JoinCluster() error {
 	// 已加入集群则跳过
 	if im.HasJoinedCluster() {
 		return nil
 	}
-
 	// 初始化后才能加入集群
 	if !im.isInit {
 		return fmt.Errorf("init manager not initialized")
 	}
-
 	// 调用RegisterNodeAndGetInfo加入集群
 	resp, err := RegisterNodeAndGetInfo()
 	if err != nil {
 		return fmt.Errorf("failed to register node: %v", err)
 	}
-
 	// 处理响应
 	if resp != nil && resp.LeaderId > 0 {
 		// 更新本地集群配置
 		im.ModifyServerHost(resp.SeverHostSever)
-
 		// 启动日志同步协程
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-
 			SyncLogsWithLeader(ctx, resp.LeaderId)
 		}()
-
 		im.SetJoinedCluster(true)
 		log.Log.Infof("Successfully joined the cluster, leader: %d", resp.LeaderId)
 	}
@@ -243,11 +230,11 @@ func (im *InitManager) JoinCluster(ctx context.Context) error {
 // InitializeResources 初始化所有资源
 func InitializeResources(configPath string, master bool) error {
 	im := GetInitManager()
-	// 如果提供了配置路径，加载配置
-	if configPath != "" {
-		if err := im.LoadConfig(configPath, master); err != nil {
-			return fmt.Errorf("failed to load config: %v", err)
-		}
+	if configPath == "" {
+		return fmt.Errorf("configPath is empty")
+	}
+	if err := im.LoadConfig(configPath, master); err != nil {
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 	// 初始化Raft状态
 	if err := im.InitializeRaftState(); err != nil {
@@ -255,7 +242,7 @@ func InitializeResources(configPath string, master bool) error {
 	}
 
 	// 向网关注册并加入集群
-	if err := im.JoinCluster(context.Background()); err != nil {
+	if err := im.JoinCluster(); err != nil {
 		log.Log.Warnf("Failed to join cluster: %v", err)
 		// 注册失败不影响本地节点启动
 	}
@@ -274,9 +261,7 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 	if gatewayClient == nil {
 		return nil, fmt.Errorf("gateway client is nil")
 	}
-
 	ctx := context.Background()
-
 	// 向Gateway注册
 	resp, err := gatewayClient.RegisterSever(ctx, &gateway.RegisterSeverReq{
 		ServerHost: config.Port,
@@ -286,7 +271,6 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// 如果是master，向网关注册成为leader
 	if config.IsMaster {
 		_, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})

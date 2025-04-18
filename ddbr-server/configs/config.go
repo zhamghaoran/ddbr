@@ -47,17 +47,14 @@ var (
 func LoadConfig(configPath string) error {
 	configLock.Lock()
 	defer configLock.Unlock()
-
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %v", err)
 	}
-
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return fmt.Errorf("failed to parse config file: %v", err)
 	}
-
 	// 设置默认值
 	if config.NodeID == nil {
 		config.NodeID = thrift.Int64Ptr(int64(uuid.New().ID()))

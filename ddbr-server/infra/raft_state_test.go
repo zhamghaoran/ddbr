@@ -2,6 +2,7 @@ package infra
 
 import (
 	"testing"
+	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
 )
 
 func TestRaftStateIntegration(t *testing.T) {
@@ -55,7 +56,7 @@ func TestRaftStateIntegration(t *testing.T) {
 	}
 
 	// 测试日志相关方法
-	testLogs := []LogEntry{
+	testLogs := []*sever.LogEntry{
 		{Term: 1, Index: 1, Command: "cmd1"},
 		{Term: 2, Index: 2, Command: "cmd2"},
 	}

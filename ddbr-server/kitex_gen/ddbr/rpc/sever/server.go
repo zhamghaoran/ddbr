@@ -486,6 +486,333 @@ var fieldIDToName_LogEntry = map[int16]string{
 	3: "command",
 }
 
+type SetReq struct {
+	Key    string         `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Value  string         `thrift:"value,2" frugal:"2,default,string" json:"value"`
+	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewSetReq() *SetReq {
+	return &SetReq{}
+}
+
+func (p *SetReq) InitDefault() {
+}
+
+func (p *SetReq) GetKey() (v string) {
+	return p.Key
+}
+
+func (p *SetReq) GetValue() (v string) {
+	return p.Value
+}
+
+var SetReq_Common_DEFAULT *common.Common
+
+func (p *SetReq) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return SetReq_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *SetReq) SetKey(val string) {
+	p.Key = val
+}
+func (p *SetReq) SetValue(val string) {
+	p.Value = val
+}
+func (p *SetReq) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *SetReq) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *SetReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SetReq(%+v)", *p)
+}
+
+var fieldIDToName_SetReq = map[int16]string{
+	1:   "key",
+	2:   "value",
+	255: "common",
+}
+
+type SetResp struct {
+	Success bool           `thrift:"success,1" frugal:"1,default,bool" json:"success"`
+	Message string         `thrift:"message,2" frugal:"2,default,string" json:"message"`
+	Common  *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewSetResp() *SetResp {
+	return &SetResp{}
+}
+
+func (p *SetResp) InitDefault() {
+}
+
+func (p *SetResp) GetSuccess() (v bool) {
+	return p.Success
+}
+
+func (p *SetResp) GetMessage() (v string) {
+	return p.Message
+}
+
+var SetResp_Common_DEFAULT *common.Common
+
+func (p *SetResp) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return SetResp_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *SetResp) SetSuccess(val bool) {
+	p.Success = val
+}
+func (p *SetResp) SetMessage(val string) {
+	p.Message = val
+}
+func (p *SetResp) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *SetResp) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *SetResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SetResp(%+v)", *p)
+}
+
+var fieldIDToName_SetResp = map[int16]string{
+	1:   "success",
+	2:   "message",
+	255: "common",
+}
+
+type GetReq struct {
+	Key    string         `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewGetReq() *GetReq {
+	return &GetReq{}
+}
+
+func (p *GetReq) InitDefault() {
+}
+
+func (p *GetReq) GetKey() (v string) {
+	return p.Key
+}
+
+var GetReq_Common_DEFAULT *common.Common
+
+func (p *GetReq) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return GetReq_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *GetReq) SetKey(val string) {
+	p.Key = val
+}
+func (p *GetReq) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *GetReq) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *GetReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("GetReq(%+v)", *p)
+}
+
+var fieldIDToName_GetReq = map[int16]string{
+	1:   "key",
+	255: "common",
+}
+
+type GetResp struct {
+	Success bool           `thrift:"success,1" frugal:"1,default,bool" json:"success"`
+	Value   string         `thrift:"value,2" frugal:"2,default,string" json:"value"`
+	Exists  bool           `thrift:"exists,3" frugal:"3,default,bool" json:"exists"`
+	Common  *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewGetResp() *GetResp {
+	return &GetResp{}
+}
+
+func (p *GetResp) InitDefault() {
+}
+
+func (p *GetResp) GetSuccess() (v bool) {
+	return p.Success
+}
+
+func (p *GetResp) GetValue() (v string) {
+	return p.Value
+}
+
+func (p *GetResp) GetExists() (v bool) {
+	return p.Exists
+}
+
+var GetResp_Common_DEFAULT *common.Common
+
+func (p *GetResp) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return GetResp_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *GetResp) SetSuccess(val bool) {
+	p.Success = val
+}
+func (p *GetResp) SetValue(val string) {
+	p.Value = val
+}
+func (p *GetResp) SetExists(val bool) {
+	p.Exists = val
+}
+func (p *GetResp) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *GetResp) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *GetResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("GetResp(%+v)", *p)
+}
+
+var fieldIDToName_GetResp = map[int16]string{
+	1:   "success",
+	2:   "value",
+	3:   "exists",
+	255: "common",
+}
+
+type DeleteReq struct {
+	Key    string         `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewDeleteReq() *DeleteReq {
+	return &DeleteReq{}
+}
+
+func (p *DeleteReq) InitDefault() {
+}
+
+func (p *DeleteReq) GetKey() (v string) {
+	return p.Key
+}
+
+var DeleteReq_Common_DEFAULT *common.Common
+
+func (p *DeleteReq) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return DeleteReq_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *DeleteReq) SetKey(val string) {
+	p.Key = val
+}
+func (p *DeleteReq) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *DeleteReq) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *DeleteReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteReq(%+v)", *p)
+}
+
+var fieldIDToName_DeleteReq = map[int16]string{
+	1:   "key",
+	255: "common",
+}
+
+type DeleteResp struct {
+	Success bool           `thrift:"success,1" frugal:"1,default,bool" json:"success"`
+	Message string         `thrift:"message,2" frugal:"2,default,string" json:"message"`
+	Common  *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
+}
+
+func NewDeleteResp() *DeleteResp {
+	return &DeleteResp{}
+}
+
+func (p *DeleteResp) InitDefault() {
+}
+
+func (p *DeleteResp) GetSuccess() (v bool) {
+	return p.Success
+}
+
+func (p *DeleteResp) GetMessage() (v string) {
+	return p.Message
+}
+
+var DeleteResp_Common_DEFAULT *common.Common
+
+func (p *DeleteResp) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return DeleteResp_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *DeleteResp) SetSuccess(val bool) {
+	p.Success = val
+}
+func (p *DeleteResp) SetMessage(val string) {
+	p.Message = val
+}
+func (p *DeleteResp) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *DeleteResp) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *DeleteResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteResp(%+v)", *p)
+}
+
+var fieldIDToName_DeleteResp = map[int16]string{
+	1:   "success",
+	2:   "message",
+	255: "common",
+}
+
 type Server interface {
 	RequestVote(ctx context.Context, req *RequestVoteReq) (r *RequestVoteResp, err error)
 
@@ -496,6 +823,12 @@ type Server interface {
 	JoinCluster(ctx context.Context, req *JoinClusterReq) (r *JoinClusterResp, err error)
 
 	SyncLogs(ctx context.Context, req *LogSyncReq) (r *LogSyncResp, err error)
+
+	Set(ctx context.Context, req *SetReq) (r *SetResp, err error)
+
+	Get(ctx context.Context, req *GetReq) (r *GetResp, err error)
+
+	Delete(ctx context.Context, req *DeleteReq) (r *DeleteResp, err error)
 }
 
 type ServerRequestVoteArgs struct {
@@ -875,5 +1208,233 @@ func (p *ServerSyncLogsResult) String() string {
 }
 
 var fieldIDToName_ServerSyncLogsResult = map[int16]string{
+	0: "success",
+}
+
+type ServerSetArgs struct {
+	Req *SetReq `thrift:"req,1" frugal:"1,default,SetReq" json:"req"`
+}
+
+func NewServerSetArgs() *ServerSetArgs {
+	return &ServerSetArgs{}
+}
+
+func (p *ServerSetArgs) InitDefault() {
+}
+
+var ServerSetArgs_Req_DEFAULT *SetReq
+
+func (p *ServerSetArgs) GetReq() (v *SetReq) {
+	if !p.IsSetReq() {
+		return ServerSetArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *ServerSetArgs) SetReq(val *SetReq) {
+	p.Req = val
+}
+
+func (p *ServerSetArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ServerSetArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerSetArgs(%+v)", *p)
+}
+
+var fieldIDToName_ServerSetArgs = map[int16]string{
+	1: "req",
+}
+
+type ServerSetResult struct {
+	Success *SetResp `thrift:"success,0,optional" frugal:"0,optional,SetResp" json:"success,omitempty"`
+}
+
+func NewServerSetResult() *ServerSetResult {
+	return &ServerSetResult{}
+}
+
+func (p *ServerSetResult) InitDefault() {
+}
+
+var ServerSetResult_Success_DEFAULT *SetResp
+
+func (p *ServerSetResult) GetSuccess() (v *SetResp) {
+	if !p.IsSetSuccess() {
+		return ServerSetResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *ServerSetResult) SetSuccess(x interface{}) {
+	p.Success = x.(*SetResp)
+}
+
+func (p *ServerSetResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ServerSetResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerSetResult(%+v)", *p)
+}
+
+var fieldIDToName_ServerSetResult = map[int16]string{
+	0: "success",
+}
+
+type ServerGetArgs struct {
+	Req *GetReq `thrift:"req,1" frugal:"1,default,GetReq" json:"req"`
+}
+
+func NewServerGetArgs() *ServerGetArgs {
+	return &ServerGetArgs{}
+}
+
+func (p *ServerGetArgs) InitDefault() {
+}
+
+var ServerGetArgs_Req_DEFAULT *GetReq
+
+func (p *ServerGetArgs) GetReq() (v *GetReq) {
+	if !p.IsSetReq() {
+		return ServerGetArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *ServerGetArgs) SetReq(val *GetReq) {
+	p.Req = val
+}
+
+func (p *ServerGetArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ServerGetArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerGetArgs(%+v)", *p)
+}
+
+var fieldIDToName_ServerGetArgs = map[int16]string{
+	1: "req",
+}
+
+type ServerGetResult struct {
+	Success *GetResp `thrift:"success,0,optional" frugal:"0,optional,GetResp" json:"success,omitempty"`
+}
+
+func NewServerGetResult() *ServerGetResult {
+	return &ServerGetResult{}
+}
+
+func (p *ServerGetResult) InitDefault() {
+}
+
+var ServerGetResult_Success_DEFAULT *GetResp
+
+func (p *ServerGetResult) GetSuccess() (v *GetResp) {
+	if !p.IsSetSuccess() {
+		return ServerGetResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *ServerGetResult) SetSuccess(x interface{}) {
+	p.Success = x.(*GetResp)
+}
+
+func (p *ServerGetResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ServerGetResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerGetResult(%+v)", *p)
+}
+
+var fieldIDToName_ServerGetResult = map[int16]string{
+	0: "success",
+}
+
+type ServerDeleteArgs struct {
+	Req *DeleteReq `thrift:"req,1" frugal:"1,default,DeleteReq" json:"req"`
+}
+
+func NewServerDeleteArgs() *ServerDeleteArgs {
+	return &ServerDeleteArgs{}
+}
+
+func (p *ServerDeleteArgs) InitDefault() {
+}
+
+var ServerDeleteArgs_Req_DEFAULT *DeleteReq
+
+func (p *ServerDeleteArgs) GetReq() (v *DeleteReq) {
+	if !p.IsSetReq() {
+		return ServerDeleteArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *ServerDeleteArgs) SetReq(val *DeleteReq) {
+	p.Req = val
+}
+
+func (p *ServerDeleteArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ServerDeleteArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerDeleteArgs(%+v)", *p)
+}
+
+var fieldIDToName_ServerDeleteArgs = map[int16]string{
+	1: "req",
+}
+
+type ServerDeleteResult struct {
+	Success *DeleteResp `thrift:"success,0,optional" frugal:"0,optional,DeleteResp" json:"success,omitempty"`
+}
+
+func NewServerDeleteResult() *ServerDeleteResult {
+	return &ServerDeleteResult{}
+}
+
+func (p *ServerDeleteResult) InitDefault() {
+}
+
+var ServerDeleteResult_Success_DEFAULT *DeleteResp
+
+func (p *ServerDeleteResult) GetSuccess() (v *DeleteResp) {
+	if !p.IsSetSuccess() {
+		return ServerDeleteResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *ServerDeleteResult) SetSuccess(x interface{}) {
+	p.Success = x.(*DeleteResp)
+}
+
+func (p *ServerDeleteResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ServerDeleteResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerDeleteResult(%+v)", *p)
+}
+
+var fieldIDToName_ServerDeleteResult = map[int16]string{
 	0: "success",
 }

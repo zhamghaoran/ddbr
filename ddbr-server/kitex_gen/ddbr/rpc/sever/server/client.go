@@ -16,6 +16,9 @@ type Client interface {
 	HeartBeat(ctx context.Context, req *sever.HeartbeatReq, callOptions ...callopt.Option) (r *sever.Heartbeatresp, err error)
 	JoinCluster(ctx context.Context, req *sever.JoinClusterReq, callOptions ...callopt.Option) (r *sever.JoinClusterResp, err error)
 	SyncLogs(ctx context.Context, req *sever.LogSyncReq, callOptions ...callopt.Option) (r *sever.LogSyncResp, err error)
+	Set(ctx context.Context, req *sever.SetReq, callOptions ...callopt.Option) (r *sever.SetResp, err error)
+	Get(ctx context.Context, req *sever.GetReq, callOptions ...callopt.Option) (r *sever.GetResp, err error)
+	Delete(ctx context.Context, req *sever.DeleteReq, callOptions ...callopt.Option) (r *sever.DeleteResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -70,4 +73,19 @@ func (p *kServerClient) JoinCluster(ctx context.Context, req *sever.JoinClusterR
 func (p *kServerClient) SyncLogs(ctx context.Context, req *sever.LogSyncReq, callOptions ...callopt.Option) (r *sever.LogSyncResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.SyncLogs(ctx, req)
+}
+
+func (p *kServerClient) Set(ctx context.Context, req *sever.SetReq, callOptions ...callopt.Option) (r *sever.SetResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Set(ctx, req)
+}
+
+func (p *kServerClient) Get(ctx context.Context, req *sever.GetReq, callOptions ...callopt.Option) (r *sever.GetResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Get(ctx, req)
+}
+
+func (p *kServerClient) Delete(ctx context.Context, req *sever.DeleteReq, callOptions ...callopt.Option) (r *sever.DeleteResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Delete(ctx, req)
 }

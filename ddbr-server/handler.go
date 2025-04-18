@@ -16,8 +16,7 @@ func (s *ServerImpl) RequestVote(ctx context.Context, req *sever.RequestVoteReq)
 
 // AppendEntries implements the ServerImpl interface.
 func (s *ServerImpl) AppendEntries(ctx context.Context, req *sever.AppendEntriesReq) (resp *sever.AppendEntriesResp, err error) {
-	// TODO: Your code here...
-	return
+	return service.AppendEntries(ctx, req)
 }
 
 // HeartBeat implements the ServerImpl interface.
@@ -34,4 +33,19 @@ func (s *ServerImpl) JoinCluster(ctx context.Context, req *sever.JoinClusterReq)
 // SyncLogs implements the ServerImpl interface.
 func (s *ServerImpl) SyncLogs(ctx context.Context, req *sever.LogSyncReq) (resp *sever.LogSyncResp, err error) {
 	return service.SyncLogs(ctx, req)
+}
+
+// Set implements the ServerImpl interface for setting key-value.
+func (s *ServerImpl) Set(ctx context.Context, req *sever.SetReq) (resp *sever.SetResp, err error) {
+	return service.Set(ctx, req)
+}
+
+// Get implements the ServerImpl interface for getting a value by key.
+func (s *ServerImpl) Get(ctx context.Context, req *sever.GetReq) (resp *sever.GetResp, err error) {
+	return service.Get(ctx, req)
+}
+
+// Delete implements the ServerImpl interface for deleting a key-value pair.
+func (s *ServerImpl) Delete(ctx context.Context, req *sever.DeleteReq) (resp *sever.DeleteResp, err error) {
+	return service.Delete(ctx, req)
 }

@@ -6,22 +6,24 @@ import (
 	"time"
 	"zhamghaoran/ddbr-server/client"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
+	"zhamghaoran/ddbr-server/log"
 )
-
-// LogEntry 表示日志条目
-type LogEntry struct {
-	Term    int64  // 写入该日志时的任期
-	Index   int64  // 日志索引
-	Command string // 日志命令内容
-}
 
 // RaftState 表示Raft节点的状态和配置
 type RaftState struct {
 	// 状态相关字段
-	Mu          sync.Mutex // 用于保护并发访问
-	CurrentTerm int64      // 当前任期
-	VotedFor    int64      // 当前任期投票给的候选人ID，如果没有则为-1
-	Logs        []LogEntry // 日志条目
+	Mu          sync.Mutex        // 用于保护并发访问
+	CurrentTerm int64             // 当前任期
+	VotedFor    int64             // 当前任期投票给的候选人ID，如果没有则为-1
+	Logs        []*sever.LogEntry // 日志条目
+
+	// 日志提交相关字段
+	CommitIndex int64 // 已知已提交的最高日志条目索引
+	LastApplied int64 // 已应用到状态机的最高日志条目索引
+
+	// 仅Leader使用的字段
+	NextIndex  map[string]int64 // 对于每个服务器，要发送的下一个日志条目索引
+	MatchIndex map[string]int64 // 对于每个服务器，已知已复制的最高日志条目
 
 	// 配置相关字段 (从RaftConfig整合而来)
 	NodeId          int64    // 节点ID (不再使用指针)
@@ -52,7 +54,15 @@ func GetRaftState() *RaftState {
 				// 状态默认值
 				CurrentTerm: 0,
 				VotedFor:    -1,
-				Logs:        []LogEntry{},
+				Logs:        []*sever.LogEntry{},
+
+				// 日志提交相关字段
+				CommitIndex: 0,
+				LastApplied: 0,
+
+				// 仅Leader使用的字段
+				NextIndex:  make(map[string]int64),
+				MatchIndex: make(map[string]int64),
 
 				// 配置默认值
 				NodeId:          0, // 将在初始化时设置
@@ -96,16 +106,16 @@ func (rs *RaftState) SetVotedFor(candidateId int64) {
 }
 
 // GetLogs 获取日志条目
-func (rs *RaftState) GetLogs() []LogEntry {
+func (rs *RaftState) GetLogs() []*sever.LogEntry {
 	rs.Mu.Lock()
 	defer rs.Mu.Unlock()
-	logsCopy := make([]LogEntry, len(rs.Logs))
+	logsCopy := make([]*sever.LogEntry, len(rs.Logs))
 	copy(logsCopy, rs.Logs)
 	return logsCopy
 }
 
 // SetLogs 设置日志条目
-func (rs *RaftState) SetLogs(logs []LogEntry) {
+func (rs *RaftState) SetLogs(logs []*sever.LogEntry) {
 	rs.Mu.Lock()
 	defer rs.Mu.Unlock()
 	rs.Logs = logs
@@ -193,4 +203,125 @@ func (rs *RaftState) ExpiredTimer(ctx context.Context, masterAddr string, closeC
 			rs.SetPeers(resp.GetPeers())
 		}
 	}
+}
+
+// GetCommitIndex 获取已提交的最高日志索引
+func (rs *RaftState) GetCommitIndex() int64 {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	return rs.CommitIndex
+}
+
+// SetCommitIndex 设置已提交的最高日志索引
+func (rs *RaftState) SetCommitIndex(index int64) {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	rs.CommitIndex = index
+}
+
+// GetLastApplied 获取已应用到状态机的最高日志索引
+func (rs *RaftState) GetLastApplied() int64 {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	return rs.LastApplied
+}
+
+// SetLastApplied 设置已应用到状态机的最高日志索引
+func (rs *RaftState) SetLastApplied(index int64) {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+	rs.LastApplied = index
+}
+
+// UpdateCommitIndex 根据多数节点的复制情况更新commitIndex (仅Leader调用)
+func (rs *RaftState) UpdateCommitIndex() int64 {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+
+	// 非Leader不应该更新CommitIndex
+	if !rs.IsMaster {
+		return rs.CommitIndex
+	}
+
+	// 获取当前日志长度
+	logLength := int64(len(rs.Logs))
+	if logLength == 0 {
+		return rs.CommitIndex
+	}
+
+	// 统计每个日志索引被复制到多少节点
+	counts := make(map[int64]int)
+	counts[0] = 1 // 自己的日志
+
+	// 计算每个节点已复制的日志数量
+	for _, matchIndex := range rs.MatchIndex {
+		if matchIndex > 0 {
+			counts[matchIndex]++
+		}
+	}
+
+	// 集群节点总数（包括自己）
+	totalNodes := len(rs.Peers) + 1
+	majority := totalNodes/2 + 1
+
+	// 检查哪些日志索引已经被大多数节点接收
+	newCommitIndex := rs.CommitIndex
+	for idx := rs.CommitIndex + 1; idx < logLength; idx++ {
+		// 如果当前任期的日志已被多数节点复制，则可以提交
+		// 注意：根据Raft论文，只有当前任期的日志才能通过计数提交
+		if counts[idx] >= majority && rs.Logs[idx].Term == rs.CurrentTerm {
+			newCommitIndex = idx
+		}
+	}
+
+	// 更新commitIndex
+	if newCommitIndex > rs.CommitIndex {
+		rs.CommitIndex = newCommitIndex
+		log.Log.Infof("Updated commitIndex to %d", newCommitIndex)
+	}
+
+	return rs.CommitIndex
+}
+
+// ApplyCommittedLogs 应用已提交但未应用的日志到状态机
+func (rs *RaftState) ApplyCommittedLogs() error {
+	rs.Mu.Lock()
+
+	// 检查是否有新的已提交日志需要应用
+	if rs.LastApplied >= rs.CommitIndex {
+		rs.Mu.Unlock()
+		return nil
+	}
+
+	// 获取需要应用的日志条目
+	logsToApply := make([]*sever.LogEntry, 0)
+	for i := rs.LastApplied + 1; i <= rs.CommitIndex; i++ {
+		if int(i) < len(rs.Logs) {
+			logsToApply = append(logsToApply, rs.Logs[i])
+		}
+	}
+
+	// 如果没有要应用的日志，返回
+	if len(logsToApply) == 0 {
+		rs.Mu.Unlock()
+		return nil
+	}
+
+	// 释放锁，避免长时间持有锁
+	rs.Mu.Unlock()
+
+	// 应用日志到状态机
+	for _, entry := range logsToApply {
+		result, err := ApplyLogToStateMachine(*entry)
+		if err != nil {
+			log.Log.Errorf("Failed to apply log entry %d: %v", entry.Index, err)
+			return err
+		}
+		log.Log.Infof("Applied log entry %d to state machine: %s", entry.Index, result)
+
+		// 更新lastApplied
+		rs.SetLastApplied(entry.Index)
+	}
+
+	return nil
 }

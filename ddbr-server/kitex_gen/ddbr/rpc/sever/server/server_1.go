@@ -48,6 +48,27 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
+	"set": kitex.NewMethodInfo(
+		setHandler,
+		newServerSetArgs,
+		newServerSetResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
+	"get": kitex.NewMethodInfo(
+		getHandler,
+		newServerGetArgs,
+		newServerGetResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
+	"delete": kitex.NewMethodInfo(
+		deleteHandler,
+		newServerDeleteArgs,
+		newServerDeleteResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
 }
 
 var (
@@ -204,6 +225,60 @@ func newServerSyncLogsResult() interface{} {
 	return sever.NewServerSyncLogsResult()
 }
 
+func setHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*sever.ServerSetArgs)
+	realResult := result.(*sever.ServerSetResult)
+	success, err := handler.(sever.Server).Set(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newServerSetArgs() interface{} {
+	return sever.NewServerSetArgs()
+}
+
+func newServerSetResult() interface{} {
+	return sever.NewServerSetResult()
+}
+
+func getHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*sever.ServerGetArgs)
+	realResult := result.(*sever.ServerGetResult)
+	success, err := handler.(sever.Server).Get(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newServerGetArgs() interface{} {
+	return sever.NewServerGetArgs()
+}
+
+func newServerGetResult() interface{} {
+	return sever.NewServerGetResult()
+}
+
+func deleteHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*sever.ServerDeleteArgs)
+	realResult := result.(*sever.ServerDeleteResult)
+	success, err := handler.(sever.Server).Delete(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newServerDeleteArgs() interface{} {
+	return sever.NewServerDeleteArgs()
+}
+
+func newServerDeleteResult() interface{} {
+	return sever.NewServerDeleteResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -259,6 +334,36 @@ func (p *kClient) SyncLogs(ctx context.Context, req *sever.LogSyncReq) (r *sever
 	_args.Req = req
 	var _result sever.ServerSyncLogsResult
 	if err = p.c.Call(ctx, "syncLogs", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) Set(ctx context.Context, req *sever.SetReq) (r *sever.SetResp, err error) {
+	var _args sever.ServerSetArgs
+	_args.Req = req
+	var _result sever.ServerSetResult
+	if err = p.c.Call(ctx, "set", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) Get(ctx context.Context, req *sever.GetReq) (r *sever.GetResp, err error) {
+	var _args sever.ServerGetArgs
+	_args.Req = req
+	var _result sever.ServerGetResult
+	if err = p.c.Call(ctx, "get", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) Delete(ctx context.Context, req *sever.DeleteReq) (r *sever.DeleteResp, err error) {
+	var _args sever.ServerDeleteArgs
+	_args.Req = req
+	var _result sever.ServerDeleteResult
+	if err = p.c.Call(ctx, "delete", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
