@@ -7,6 +7,7 @@ import (
 	"sync"
 	"zhamghaoran/ddbr-server/constant"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway/gateway"
+	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever/server"
 )
 
 var gatewayClient gateway.Client
@@ -15,6 +16,13 @@ func GetGatewayClient() gateway.Client {
 	onceFunc := sync.OnceFunc(createGatewayClient)
 	onceFunc()
 	return gatewayClient
+}
+func GetMasterClient(masterHost string) server.Client {
+	serverClient := server.MustNewClient("server",
+		client.WithHostPorts(masterHost+":8080"),
+		client.WithPayloadCodec(thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite)),
+		client.WithTransportProtocol(transport.Framed))
+	return serverClient
 }
 func createGatewayClient() {
 	gatewayClient = gateway.MustNewClient("gateway",

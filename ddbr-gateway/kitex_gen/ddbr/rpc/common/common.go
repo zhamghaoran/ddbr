@@ -7,8 +7,8 @@ import (
 )
 
 type Common struct {
-	RespCode int32  `thrift:"resp_code,1" json:"resp_code"`
-	Message  string `thrift:"message,2" json:"message"`
+	RespCode int32  `thrift:"resp_code,1" frugal:"1,default,i32" json:"resp_code"`
+	Message  string `thrift:"message,2" frugal:"2,default,string" json:"message"`
 }
 
 func NewCommon() *Common {
@@ -45,7 +45,7 @@ var fieldIDToName_Common = map[int16]string{
 }
 
 type Password struct {
-	Password string `thrift:"password,1" json:"password"`
+	Password string `thrift:"password,1" frugal:"1,default,string" json:"password"`
 }
 
 func NewPassword() *Password {

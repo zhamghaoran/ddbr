@@ -1,6 +1,7 @@
-package initialization
+package infra
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,8 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"zhamghaoran/ddbr-server/client"
+	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway"
 	"zhamghaoran/ddbr-server/log"
-	"zhamghaoran/ddbr-server/service"
 )
 
 // InitManager 初始化管理器
@@ -32,6 +34,9 @@ func GetServerConfig() RaftConfig {
 	config := manager.config
 	return *config
 }
+func SetSetPeers(peers []string) {
+	GetInitManager().config.Peers = peers
+}
 
 // GetInitManager 获取初始化管理器实例
 func GetInitManager() *InitManager {
@@ -45,7 +50,7 @@ func GetInitManager() *InitManager {
 }
 
 // LoadConfig 从文件加载配置
-func (im *InitManager) LoadConfig(configPath string) error {
+func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	im.mu.Lock()
 	defer im.mu.Unlock()
 
@@ -60,6 +65,7 @@ func (im *InitManager) LoadConfig(configPath string) error {
 	}
 
 	im.config = &config
+	im.config.IsMaster = master
 	im.dataPath = config.DataDir
 	return nil
 }
@@ -83,7 +89,7 @@ func (im *InitManager) InitializeRaftState() error {
 	if im.config == nil {
 		// 如果没有加载配置，使用默认配置
 		im.config = &RaftConfig{
-			NodeId:          service.GetRaftState().GetNodeId(),
+			NodeId:          GetRaftState().GetNodeId(),
 			ClusterId:       1,
 			ElectionTimeout: 1000,
 			HeartbeatPeriod: 100,
@@ -92,7 +98,7 @@ func (im *InitManager) InitializeRaftState() error {
 		}
 	} else {
 		// 使用配置文件中的节点ID
-		service.GetRaftState().SetNodeId(im.config.NodeId)
+		GetRaftState().SetNodeId(im.config.NodeId)
 	}
 
 	// 尝试从持久化存储恢复状态
@@ -117,9 +123,9 @@ func (im *InitManager) recoverFromStorage() error {
 	}
 
 	type persistentState struct {
-		CurrentTerm int64              `json:"current_term"`
-		VotedFor    int64              `json:"voted_for"`
-		Logs        []service.LogEntry `json:"logs"`
+		CurrentTerm int64      `json:"current_term"`
+		VotedFor    int64      `json:"voted_for"`
+		Logs        []LogEntry `json:"logs"`
 	}
 
 	var state persistentState
@@ -127,7 +133,7 @@ func (im *InitManager) recoverFromStorage() error {
 		return fmt.Errorf("failed to parse state file: %v", err)
 	}
 
-	raftState := service.GetRaftState()
+	raftState := GetRaftState()
 	raftState.SetCurrentTerm(state.CurrentTerm)
 	raftState.SetVotedFor(state.VotedFor)
 	raftState.SetLogs(state.Logs)
@@ -143,11 +149,11 @@ func (im *InitManager) PersistRaftState() error {
 
 	statePath := filepath.Join(im.config.DataDir, "raft_state.json")
 
-	raftState := service.GetRaftState()
+	raftState := GetRaftState()
 	state := struct {
-		CurrentTerm int64              `json:"current_term"`
-		VotedFor    int64              `json:"voted_for"`
-		Logs        []service.LogEntry `json:"logs"`
+		CurrentTerm int64      `json:"current_term"`
+		VotedFor    int64      `json:"voted_for"`
+		Logs        []LogEntry `json:"logs"`
 	}{
 		CurrentTerm: raftState.GetCurrentTerm(),
 		VotedFor:    raftState.GetVotedFor(),
@@ -178,4 +184,48 @@ func (im *InitManager) GetRaftConfig() *RaftConfig {
 	// 返回配置的副本，避免外部修改
 	configCopy := *im.config
 	return &configCopy
+}
+
+// InitializeResources 初始化所有资源
+func InitializeResources(configPath string, master bool) error {
+	im := GetInitManager()
+	// 如果提供了配置路径，加载配置
+	if configPath != "" {
+		if err := im.LoadConfig(configPath, master); err != nil {
+			return fmt.Errorf("failed to load config: %v", err)
+		}
+	}
+	// 初始化Raft状态
+	if err := im.InitializeRaftState(); err != nil {
+		return fmt.Errorf("failed to initialize Raft state: %v", err)
+	}
+	// 向gateway 节点和 master 节点注册
+	if err := RegisterNode(); err != nil {
+		return fmt.Errorf("failed to register node: %v", err)
+	}
+	log.Log.Info("raft state initialized")
+	return nil
+}
+func RegisterNode() error {
+	// 注册服务到网关
+	config := GetServerConfig()
+	gatewayClient := client.GetGatewayClient()
+	if gatewayClient == nil {
+		return fmt.Errorf("gateway client is nil")
+	}
+	ctx := context.Background()
+	_, err := gatewayClient.RegisterSever(ctx, &gateway.RegisterSeverReq{})
+	// 自己是master，向网关注册
+	if config.IsMaster {
+		_, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
+		if err != nil {
+			panic(err)
+		}
+	} else {
+
+	}
+	if err != nil {
+		panic(err)
+	}
+	return err
 }

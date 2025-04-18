@@ -24,3 +24,9 @@ func (s *ServerImpl) AppendEntries(ctx context.Context, req *sever.AppendEntries
 func (s *ServerImpl) HeartBeat(ctx context.Context, req *sever.HeartbeatReq) (resp *sever.Heartbeatresp, err error) {
 	return service.HeartBeat(ctx, req)
 }
+
+// JoinCluster implements the ServerImpl interface.
+func (s *ServerImpl) JoinCluster(ctx context.Context, req *sever.JoinClusterReq) (resp *sever.JoinClusterResp, err error) {
+	// TODO: Your code here...
+	return
+}

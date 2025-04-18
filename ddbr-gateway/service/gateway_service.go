@@ -58,7 +58,11 @@ func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway
 }
 func SetLeader(ctx context.Context, req *gateway.SetLeaderReq) (*gateway.SetLeaderResp, error) {
 	resp := &gateway.SetLeaderResp{}
-	repo.SetLeader(req.LeaderHost)
-	resp.SeverHostSever = repo.GetSeverList()
+	host, err := util.GetRemoteHost(ctx)
+	if err != nil {
+		return nil, err
+	}
+	repo.SetLeader(host)
+	resp.SetMasterHost(repo.GetLeaderHost())
 	return resp, nil
 }

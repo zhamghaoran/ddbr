@@ -368,7 +368,7 @@ func (p *RegisterGatewayReq) String() string {
 var fieldIDToName_RegisterGatewayReq = map[int16]string{}
 
 type SetLeaderResp struct {
-	SeverHostSever []string `thrift:"severHostSever,1" frugal:"1,default,list<string>" json:"severHostSever"`
+	MasterHost string `thrift:"MasterHost,1" frugal:"1,default,string" json:"MasterHost"`
 }
 
 func NewSetLeaderResp() *SetLeaderResp {
@@ -378,11 +378,11 @@ func NewSetLeaderResp() *SetLeaderResp {
 func (p *SetLeaderResp) InitDefault() {
 }
 
-func (p *SetLeaderResp) GetSeverHostSever() (v []string) {
-	return p.SeverHostSever
+func (p *SetLeaderResp) GetMasterHost() (v string) {
+	return p.MasterHost
 }
-func (p *SetLeaderResp) SetSeverHostSever(val []string) {
-	p.SeverHostSever = val
+func (p *SetLeaderResp) SetMasterHost(val string) {
+	p.MasterHost = val
 }
 
 func (p *SetLeaderResp) String() string {
@@ -393,11 +393,10 @@ func (p *SetLeaderResp) String() string {
 }
 
 var fieldIDToName_SetLeaderResp = map[int16]string{
-	1: "severHostSever",
+	1: "MasterHost",
 }
 
 type SetLeaderReq struct {
-	LeaderHost string `thrift:"leaderHost,1" frugal:"1,default,string" json:"leaderHost"`
 }
 
 func NewSetLeaderReq() *SetLeaderReq {
@@ -407,13 +406,6 @@ func NewSetLeaderReq() *SetLeaderReq {
 func (p *SetLeaderReq) InitDefault() {
 }
 
-func (p *SetLeaderReq) GetLeaderHost() (v string) {
-	return p.LeaderHost
-}
-func (p *SetLeaderReq) SetLeaderHost(val string) {
-	p.LeaderHost = val
-}
-
 func (p *SetLeaderReq) String() string {
 	if p == nil {
 		return "<nil>"
@@ -421,9 +413,7 @@ func (p *SetLeaderReq) String() string {
 	return fmt.Sprintf("SetLeaderReq(%+v)", *p)
 }
 
-var fieldIDToName_SetLeaderReq = map[int16]string{
-	1: "leaderHost",
-}
+var fieldIDToName_SetLeaderReq = map[int16]string{}
 
 type Gateway interface {
 	Set(ctx context.Context, req *SetRequest) (r *SetResponse, err error)

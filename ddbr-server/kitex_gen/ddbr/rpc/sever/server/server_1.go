@@ -34,6 +34,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
+	"joinCluster": kitex.NewMethodInfo(
+		joinClusterHandler,
+		newServerJoinClusterArgs,
+		newServerJoinClusterResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
 }
 
 var (
@@ -154,6 +161,24 @@ func newServerHeartBeatResult() interface{} {
 	return sever.NewServerHeartBeatResult()
 }
 
+func joinClusterHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*sever.ServerJoinClusterArgs)
+	realResult := result.(*sever.ServerJoinClusterResult)
+	success, err := handler.(sever.Server).JoinCluster(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newServerJoinClusterArgs() interface{} {
+	return sever.NewServerJoinClusterArgs()
+}
+
+func newServerJoinClusterResult() interface{} {
+	return sever.NewServerJoinClusterResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -189,6 +214,16 @@ func (p *kClient) HeartBeat(ctx context.Context, req *sever.HeartbeatReq) (r *se
 	_args.Req = req
 	var _result sever.ServerHeartBeatResult
 	if err = p.c.Call(ctx, "heartBeat", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) JoinCluster(ctx context.Context, req *sever.JoinClusterReq) (r *sever.JoinClusterResp, err error) {
+	var _args sever.ServerJoinClusterArgs
+	_args.Req = req
+	var _result sever.ServerJoinClusterResult
+	if err = p.c.Call(ctx, "joinCluster", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

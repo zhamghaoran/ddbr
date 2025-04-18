@@ -1,4 +1,4 @@
-package initialization
+package infra
 
 // RaftConfig 表示Raft节点配置
 type RaftConfig struct {
@@ -10,5 +10,7 @@ type RaftConfig struct {
 	DataDir         string   `json:"data_dir"`         // 数据目录
 	SnapshotCount   int64    `json:"snapshot_count"`   // 触发快照的日志条目数
 	Port            string   `json:"port"`             // 服务端口号
-	GatewayHost     string   `json:"gateway_host"`
+	GatewayHost     string   `json:"gateway_host"`     // 网关地址
+	IsMaster        bool     `json:"is_master"`        // 自己是否是master
+	MasterAddr      string   `json:"master_addr"`      // master 地址
 }

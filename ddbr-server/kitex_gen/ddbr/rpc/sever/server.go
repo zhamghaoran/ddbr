@@ -9,10 +9,10 @@ import (
 )
 
 type RequestVoteReq struct {
-	Term         int64 `thrift:"term,1" json:"term"`
-	CandidateId  int64 `thrift:"candidateId,2" json:"candidateId"`
-	LastLogIndex int64 `thrift:"lastLogIndex,3" json:"lastLogIndex"`
-	LastLogTerm  int64 `thrift:"lastLogTerm,4" json:"lastLogTerm"`
+	Term         int64 `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	CandidateId  int64 `thrift:"candidateId,2" frugal:"2,default,i64" json:"candidateId"`
+	LastLogIndex int64 `thrift:"lastLogIndex,3" frugal:"3,default,i64" json:"lastLogIndex"`
+	LastLogTerm  int64 `thrift:"lastLogTerm,4" frugal:"4,default,i64" json:"lastLogTerm"`
 }
 
 func NewRequestVoteReq() *RequestVoteReq {
@@ -65,9 +65,9 @@ var fieldIDToName_RequestVoteReq = map[int16]string{
 }
 
 type RequestVoteResp struct {
-	Term        int64          `thrift:"term,1" json:"term"`
-	VoteGranted bool           `thrift:"voteGranted,2" json:"voteGranted"`
-	Common      *common.Common `thrift:"common,3" json:"common"`
+	Term        int64          `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	VoteGranted bool           `thrift:"voteGranted,2" frugal:"2,default,bool" json:"voteGranted"`
+	Common      *common.Common `thrift:"common,3" frugal:"3,default,common.Common" json:"common"`
 }
 
 func NewRequestVoteResp() *RequestVoteResp {
@@ -121,12 +121,12 @@ var fieldIDToName_RequestVoteResp = map[int16]string{
 }
 
 type AppendEntriesReq struct {
-	Term         int64    `thrift:"term,1" json:"term"`
-	LeaderId     int64    `thrift:"leaderId,2" json:"leaderId"`
-	PrevLogIndex int64    `thrift:"prevLogIndex,3" json:"prevLogIndex"`
-	PrevLogTerm  int64    `thrift:"prevLogTerm,4" json:"prevLogTerm"`
-	Entries      []string `thrift:"entries,5" json:"entries"`
-	LeaderCommit int64    `thrift:"leaderCommit,6" json:"leaderCommit"`
+	Term         int64    `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	LeaderId     int64    `thrift:"leaderId,2" frugal:"2,default,i64" json:"leaderId"`
+	PrevLogIndex int64    `thrift:"prevLogIndex,3" frugal:"3,default,i64" json:"prevLogIndex"`
+	PrevLogTerm  int64    `thrift:"prevLogTerm,4" frugal:"4,default,i64" json:"prevLogTerm"`
+	Entries      []string `thrift:"entries,5" frugal:"5,default,list<string>" json:"entries"`
+	LeaderCommit int64    `thrift:"leaderCommit,6" frugal:"6,default,i64" json:"leaderCommit"`
 }
 
 func NewAppendEntriesReq() *AppendEntriesReq {
@@ -195,8 +195,8 @@ var fieldIDToName_AppendEntriesReq = map[int16]string{
 }
 
 type AppendEntriesResp struct {
-	Term    int64 `thrift:"term,1" json:"term"`
-	Success bool  `thrift:"success,2" json:"success"`
+	Term    int64 `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	Success bool  `thrift:"success,2" frugal:"2,default,bool" json:"success"`
 }
 
 func NewAppendEntriesResp() *AppendEntriesResp {
@@ -252,8 +252,8 @@ func (p *HeartbeatReq) String() string {
 var fieldIDToName_HeartbeatReq = map[int16]string{}
 
 type Heartbeatresp struct {
-	Peers  []string       `thrift:"Peers,1" json:"Peers"`
-	Common *common.Common `thrift:"common,255" json:"common"`
+	Peers  []string       `thrift:"Peers,1" frugal:"1,default,list<string>" json:"Peers"`
+	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
 }
 
 func NewHeartbeatresp() *Heartbeatresp {
@@ -298,16 +298,56 @@ var fieldIDToName_Heartbeatresp = map[int16]string{
 	255: "common",
 }
 
+type JoinClusterReq struct {
+}
+
+func NewJoinClusterReq() *JoinClusterReq {
+	return &JoinClusterReq{}
+}
+
+func (p *JoinClusterReq) InitDefault() {
+}
+
+func (p *JoinClusterReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("JoinClusterReq(%+v)", *p)
+}
+
+var fieldIDToName_JoinClusterReq = map[int16]string{}
+
+type JoinClusterResp struct {
+}
+
+func NewJoinClusterResp() *JoinClusterResp {
+	return &JoinClusterResp{}
+}
+
+func (p *JoinClusterResp) InitDefault() {
+}
+
+func (p *JoinClusterResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("JoinClusterResp(%+v)", *p)
+}
+
+var fieldIDToName_JoinClusterResp = map[int16]string{}
+
 type Server interface {
 	RequestVote(ctx context.Context, req *RequestVoteReq) (r *RequestVoteResp, err error)
 
 	AppendEntries(ctx context.Context, req *AppendEntriesReq) (r *AppendEntriesResp, err error)
 
 	HeartBeat(ctx context.Context, req *HeartbeatReq) (r *Heartbeatresp, err error)
+
+	JoinCluster(ctx context.Context, req *JoinClusterReq) (r *JoinClusterResp, err error)
 }
 
 type ServerRequestVoteArgs struct {
-	Req *RequestVoteReq `thrift:"req,1" json:"req"`
+	Req *RequestVoteReq `thrift:"req,1" frugal:"1,default,RequestVoteReq" json:"req"`
 }
 
 func NewServerRequestVoteArgs() *ServerRequestVoteArgs {
@@ -345,7 +385,7 @@ var fieldIDToName_ServerRequestVoteArgs = map[int16]string{
 }
 
 type ServerRequestVoteResult struct {
-	Success *RequestVoteResp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *RequestVoteResp `thrift:"success,0,optional" frugal:"0,optional,RequestVoteResp" json:"success,omitempty"`
 }
 
 func NewServerRequestVoteResult() *ServerRequestVoteResult {
@@ -383,7 +423,7 @@ var fieldIDToName_ServerRequestVoteResult = map[int16]string{
 }
 
 type ServerAppendEntriesArgs struct {
-	Req *AppendEntriesReq `thrift:"req,1" json:"req"`
+	Req *AppendEntriesReq `thrift:"req,1" frugal:"1,default,AppendEntriesReq" json:"req"`
 }
 
 func NewServerAppendEntriesArgs() *ServerAppendEntriesArgs {
@@ -421,7 +461,7 @@ var fieldIDToName_ServerAppendEntriesArgs = map[int16]string{
 }
 
 type ServerAppendEntriesResult struct {
-	Success *AppendEntriesResp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *AppendEntriesResp `thrift:"success,0,optional" frugal:"0,optional,AppendEntriesResp" json:"success,omitempty"`
 }
 
 func NewServerAppendEntriesResult() *ServerAppendEntriesResult {
@@ -459,7 +499,7 @@ var fieldIDToName_ServerAppendEntriesResult = map[int16]string{
 }
 
 type ServerHeartBeatArgs struct {
-	Req *HeartbeatReq `thrift:"req,1" json:"req"`
+	Req *HeartbeatReq `thrift:"req,1" frugal:"1,default,HeartbeatReq" json:"req"`
 }
 
 func NewServerHeartBeatArgs() *ServerHeartBeatArgs {
@@ -497,7 +537,7 @@ var fieldIDToName_ServerHeartBeatArgs = map[int16]string{
 }
 
 type ServerHeartBeatResult struct {
-	Success *Heartbeatresp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *Heartbeatresp `thrift:"success,0,optional" frugal:"0,optional,Heartbeatresp" json:"success,omitempty"`
 }
 
 func NewServerHeartBeatResult() *ServerHeartBeatResult {
@@ -531,5 +571,81 @@ func (p *ServerHeartBeatResult) String() string {
 }
 
 var fieldIDToName_ServerHeartBeatResult = map[int16]string{
+	0: "success",
+}
+
+type ServerJoinClusterArgs struct {
+	Req *JoinClusterReq `thrift:"req,1" frugal:"1,default,JoinClusterReq" json:"req"`
+}
+
+func NewServerJoinClusterArgs() *ServerJoinClusterArgs {
+	return &ServerJoinClusterArgs{}
+}
+
+func (p *ServerJoinClusterArgs) InitDefault() {
+}
+
+var ServerJoinClusterArgs_Req_DEFAULT *JoinClusterReq
+
+func (p *ServerJoinClusterArgs) GetReq() (v *JoinClusterReq) {
+	if !p.IsSetReq() {
+		return ServerJoinClusterArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *ServerJoinClusterArgs) SetReq(val *JoinClusterReq) {
+	p.Req = val
+}
+
+func (p *ServerJoinClusterArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ServerJoinClusterArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerJoinClusterArgs(%+v)", *p)
+}
+
+var fieldIDToName_ServerJoinClusterArgs = map[int16]string{
+	1: "req",
+}
+
+type ServerJoinClusterResult struct {
+	Success *JoinClusterResp `thrift:"success,0,optional" frugal:"0,optional,JoinClusterResp" json:"success,omitempty"`
+}
+
+func NewServerJoinClusterResult() *ServerJoinClusterResult {
+	return &ServerJoinClusterResult{}
+}
+
+func (p *ServerJoinClusterResult) InitDefault() {
+}
+
+var ServerJoinClusterResult_Success_DEFAULT *JoinClusterResp
+
+func (p *ServerJoinClusterResult) GetSuccess() (v *JoinClusterResp) {
+	if !p.IsSetSuccess() {
+		return ServerJoinClusterResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *ServerJoinClusterResult) SetSuccess(x interface{}) {
+	p.Success = x.(*JoinClusterResp)
+}
+
+func (p *ServerJoinClusterResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ServerJoinClusterResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("ServerJoinClusterResult(%+v)", *p)
+}
+
+var fieldIDToName_ServerJoinClusterResult = map[int16]string{
 	0: "success",
 }

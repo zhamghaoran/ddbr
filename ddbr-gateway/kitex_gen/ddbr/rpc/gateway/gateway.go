@@ -9,9 +9,9 @@ import (
 )
 
 type SetRequest struct {
-	Key      string           `thrift:"key,1" json:"key"`
-	Val      string           `thrift:"val,2" json:"val"`
-	Password *common.Password `thrift:"password,255" json:"password"`
+	Key      string           `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Val      string           `thrift:"val,2" frugal:"2,default,string" json:"val"`
+	Password *common.Password `thrift:"password,255" frugal:"255,default,common.Password" json:"password"`
 }
 
 func NewSetRequest() *SetRequest {
@@ -65,7 +65,7 @@ var fieldIDToName_SetRequest = map[int16]string{
 }
 
 type SetResponse struct {
-	Common *common.Common `thrift:"common,1" json:"common"`
+	Common *common.Common `thrift:"common,1" frugal:"1,default,common.Common" json:"common"`
 }
 
 func NewSetResponse() *SetResponse {
@@ -103,8 +103,8 @@ var fieldIDToName_SetResponse = map[int16]string{
 }
 
 type GetRequest struct {
-	Key      string           `thrift:"key,1" json:"key"`
-	Password *common.Password `thrift:"password,2" json:"password"`
+	Key      string           `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Password *common.Password `thrift:"password,2" frugal:"2,default,common.Password" json:"password"`
 }
 
 func NewGetRequest() *GetRequest {
@@ -150,8 +150,8 @@ var fieldIDToName_GetRequest = map[int16]string{
 }
 
 type GetResponse struct {
-	Val    string         `thrift:"val,1" json:"val"`
-	Common *common.Common `thrift:"common,255" json:"common"`
+	Val    string         `thrift:"val,1" frugal:"1,default,string" json:"val"`
+	Common *common.Common `thrift:"common,255" frugal:"255,default,common.Common" json:"common"`
 }
 
 func NewGetResponse() *GetResponse {
@@ -197,7 +197,7 @@ var fieldIDToName_GetResponse = map[int16]string{
 }
 
 type RegisterSeverReq struct {
-	ServerHost string `thrift:"serverHost,1" json:"serverHost"`
+	ServerHost string `thrift:"serverHost,1" frugal:"1,default,string" json:"serverHost"`
 }
 
 func NewRegisterSeverReq() *RegisterSeverReq {
@@ -226,8 +226,8 @@ var fieldIDToName_RegisterSeverReq = map[int16]string{
 }
 
 type RegisterSeverResp struct {
-	LeaderHost     string   `thrift:"leaderHost,1" json:"leaderHost"`
-	SeverHostSever []string `thrift:"severHostSever,2" json:"severHostSever"`
+	LeaderHost     string   `thrift:"leaderHost,1" frugal:"1,default,string" json:"leaderHost"`
+	SeverHostSever []string `thrift:"severHostSever,2" frugal:"2,default,list<string>" json:"severHostSever"`
 }
 
 func NewRegisterSeverResp() *RegisterSeverResp {
@@ -264,7 +264,7 @@ var fieldIDToName_RegisterSeverResp = map[int16]string{
 }
 
 type RegisterGatewayResp struct {
-	Info *GatewayBasicInfo `thrift:"info,1" json:"info"`
+	Info *GatewayBasicInfo `thrift:"info,1" frugal:"1,default,GatewayBasicInfo" json:"info"`
 }
 
 func NewRegisterGatewayResp() *RegisterGatewayResp {
@@ -302,8 +302,8 @@ var fieldIDToName_RegisterGatewayResp = map[int16]string{
 }
 
 type GatewayBasicInfo struct {
-	SeverHostSever []string         `thrift:"severHostSever,1" json:"severHostSever"`
-	Password       *common.Password `thrift:"password,2" json:"password"`
+	SeverHostSever []string         `thrift:"severHostSever,1" frugal:"1,default,list<string>" json:"severHostSever"`
+	Password       *common.Password `thrift:"password,2" frugal:"2,default,common.Password" json:"password"`
 }
 
 func NewGatewayBasicInfo() *GatewayBasicInfo {
@@ -368,7 +368,7 @@ func (p *RegisterGatewayReq) String() string {
 var fieldIDToName_RegisterGatewayReq = map[int16]string{}
 
 type SetLeaderResp struct {
-	SeverHostSever []string `thrift:"severHostSever,1" json:"severHostSever"`
+	MasterHost string `thrift:"MasterHost,1" frugal:"1,default,string" json:"MasterHost"`
 }
 
 func NewSetLeaderResp() *SetLeaderResp {
@@ -378,11 +378,11 @@ func NewSetLeaderResp() *SetLeaderResp {
 func (p *SetLeaderResp) InitDefault() {
 }
 
-func (p *SetLeaderResp) GetSeverHostSever() (v []string) {
-	return p.SeverHostSever
+func (p *SetLeaderResp) GetMasterHost() (v string) {
+	return p.MasterHost
 }
-func (p *SetLeaderResp) SetSeverHostSever(val []string) {
-	p.SeverHostSever = val
+func (p *SetLeaderResp) SetMasterHost(val string) {
+	p.MasterHost = val
 }
 
 func (p *SetLeaderResp) String() string {
@@ -393,11 +393,10 @@ func (p *SetLeaderResp) String() string {
 }
 
 var fieldIDToName_SetLeaderResp = map[int16]string{
-	1: "severHostSever",
+	1: "MasterHost",
 }
 
 type SetLeaderReq struct {
-	LeaderHost string `thrift:"leaderHost,1" json:"leaderHost"`
 }
 
 func NewSetLeaderReq() *SetLeaderReq {
@@ -407,13 +406,6 @@ func NewSetLeaderReq() *SetLeaderReq {
 func (p *SetLeaderReq) InitDefault() {
 }
 
-func (p *SetLeaderReq) GetLeaderHost() (v string) {
-	return p.LeaderHost
-}
-func (p *SetLeaderReq) SetLeaderHost(val string) {
-	p.LeaderHost = val
-}
-
 func (p *SetLeaderReq) String() string {
 	if p == nil {
 		return "<nil>"
@@ -421,9 +413,7 @@ func (p *SetLeaderReq) String() string {
 	return fmt.Sprintf("SetLeaderReq(%+v)", *p)
 }
 
-var fieldIDToName_SetLeaderReq = map[int16]string{
-	1: "leaderHost",
-}
+var fieldIDToName_SetLeaderReq = map[int16]string{}
 
 type Gateway interface {
 	Set(ctx context.Context, req *SetRequest) (r *SetResponse, err error)
@@ -438,7 +428,7 @@ type Gateway interface {
 }
 
 type GatewaySetArgs struct {
-	Req *SetRequest `thrift:"req,1" json:"req"`
+	Req *SetRequest `thrift:"req,1" frugal:"1,default,SetRequest" json:"req"`
 }
 
 func NewGatewaySetArgs() *GatewaySetArgs {
@@ -476,7 +466,7 @@ var fieldIDToName_GatewaySetArgs = map[int16]string{
 }
 
 type GatewaySetResult struct {
-	Success *SetResponse `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *SetResponse `thrift:"success,0,optional" frugal:"0,optional,SetResponse" json:"success,omitempty"`
 }
 
 func NewGatewaySetResult() *GatewaySetResult {
@@ -514,7 +504,7 @@ var fieldIDToName_GatewaySetResult = map[int16]string{
 }
 
 type GatewayGetArgs struct {
-	Req *GetRequest `thrift:"req,1" json:"req"`
+	Req *GetRequest `thrift:"req,1" frugal:"1,default,GetRequest" json:"req"`
 }
 
 func NewGatewayGetArgs() *GatewayGetArgs {
@@ -552,7 +542,7 @@ var fieldIDToName_GatewayGetArgs = map[int16]string{
 }
 
 type GatewayGetResult struct {
-	Success *GetResponse `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *GetResponse `thrift:"success,0,optional" frugal:"0,optional,GetResponse" json:"success,omitempty"`
 }
 
 func NewGatewayGetResult() *GatewayGetResult {
@@ -590,7 +580,7 @@ var fieldIDToName_GatewayGetResult = map[int16]string{
 }
 
 type GatewayRegisterSeverArgs struct {
-	Req *RegisterSeverReq `thrift:"req,1" json:"req"`
+	Req *RegisterSeverReq `thrift:"req,1" frugal:"1,default,RegisterSeverReq" json:"req"`
 }
 
 func NewGatewayRegisterSeverArgs() *GatewayRegisterSeverArgs {
@@ -628,7 +618,7 @@ var fieldIDToName_GatewayRegisterSeverArgs = map[int16]string{
 }
 
 type GatewayRegisterSeverResult struct {
-	Success *RegisterSeverResp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *RegisterSeverResp `thrift:"success,0,optional" frugal:"0,optional,RegisterSeverResp" json:"success,omitempty"`
 }
 
 func NewGatewayRegisterSeverResult() *GatewayRegisterSeverResult {
@@ -666,7 +656,7 @@ var fieldIDToName_GatewayRegisterSeverResult = map[int16]string{
 }
 
 type GatewayRegisterGatewayArgs struct {
-	Req *RegisterGatewayReq `thrift:"req,1" json:"req"`
+	Req *RegisterGatewayReq `thrift:"req,1" frugal:"1,default,RegisterGatewayReq" json:"req"`
 }
 
 func NewGatewayRegisterGatewayArgs() *GatewayRegisterGatewayArgs {
@@ -704,7 +694,7 @@ var fieldIDToName_GatewayRegisterGatewayArgs = map[int16]string{
 }
 
 type GatewayRegisterGatewayResult struct {
-	Success *RegisterGatewayResp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *RegisterGatewayResp `thrift:"success,0,optional" frugal:"0,optional,RegisterGatewayResp" json:"success,omitempty"`
 }
 
 func NewGatewayRegisterGatewayResult() *GatewayRegisterGatewayResult {
@@ -742,7 +732,7 @@ var fieldIDToName_GatewayRegisterGatewayResult = map[int16]string{
 }
 
 type GatewaySetLeaderArgs struct {
-	Req *SetLeaderReq `thrift:"req,1" json:"req"`
+	Req *SetLeaderReq `thrift:"req,1" frugal:"1,default,SetLeaderReq" json:"req"`
 }
 
 func NewGatewaySetLeaderArgs() *GatewaySetLeaderArgs {
@@ -780,7 +770,7 @@ var fieldIDToName_GatewaySetLeaderArgs = map[int16]string{
 }
 
 type GatewaySetLeaderResult struct {
-	Success *SetLeaderResp `thrift:"success,0,optional" json:"success,omitempty"`
+	Success *SetLeaderResp `thrift:"success,0,optional" frugal:"0,optional,SetLeaderResp" json:"success,omitempty"`
 }
 
 func NewGatewaySetLeaderResult() *GatewaySetLeaderResult {

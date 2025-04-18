@@ -1,9 +1,12 @@
-package service
+package infra
 
 import (
-	"sync"
-
+	"context"
 	"github.com/google/uuid"
+	"sync"
+	"time"
+	"zhamghaoran/ddbr-server/client"
+	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
 )
 
 // RaftState 表示Raft节点的状态
@@ -105,4 +108,26 @@ func (rs *RaftState) SetNodeId(nodeId int64) {
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 	rs.nodeId = nodeId
+}
+func (rs *RaftState) BeginVote() {
+
+}
+func (rs *RaftState) ExpiredTimer(ctx context.Context, masterAddr string, closeCh chan int) {
+	serverClient := client.GetMasterClient(masterAddr)
+	selfSpinTime := GetServerConfig().ElectionTimeout
+	for {
+		select {
+		case <-closeCh:
+			return
+		case <-time.After(time.Second * time.Duration(selfSpinTime)):
+			resp, err := serverClient.HeartBeat(ctx, &sever.HeartbeatReq{})
+			if err != nil {
+				rs.BeginVote()
+				return
+			}
+			SetSetPeers(resp.GetPeers())
+			resp.
+		}
+	}
+
 }

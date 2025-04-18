@@ -14,6 +14,7 @@ type Client interface {
 	RequestVote(ctx context.Context, req *sever.RequestVoteReq, callOptions ...callopt.Option) (r *sever.RequestVoteResp, err error)
 	AppendEntries(ctx context.Context, req *sever.AppendEntriesReq, callOptions ...callopt.Option) (r *sever.AppendEntriesResp, err error)
 	HeartBeat(ctx context.Context, req *sever.HeartbeatReq, callOptions ...callopt.Option) (r *sever.Heartbeatresp, err error)
+	JoinCluster(ctx context.Context, req *sever.JoinClusterReq, callOptions ...callopt.Option) (r *sever.JoinClusterResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -58,4 +59,9 @@ func (p *kServerClient) AppendEntries(ctx context.Context, req *sever.AppendEntr
 func (p *kServerClient) HeartBeat(ctx context.Context, req *sever.HeartbeatReq, callOptions ...callopt.Option) (r *sever.Heartbeatresp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.HeartBeat(ctx, req)
+}
+
+func (p *kServerClient) JoinCluster(ctx context.Context, req *sever.JoinClusterReq, callOptions ...callopt.Option) (r *sever.JoinClusterResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.JoinCluster(ctx, req)
 }

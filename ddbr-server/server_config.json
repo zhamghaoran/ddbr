@@ -3,6 +3,6 @@
   "heartbeat_period": 500,
   "data_dir": "/data/raft/data",
   "snapshot_count": 1000,
-  "port": 8080,
-  "gateway_host": "gateway-master"
+  "port": "8080",
+  "gateway_host": "gateway-master:8080"
 }

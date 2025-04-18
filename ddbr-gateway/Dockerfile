@@ -2,6 +2,8 @@ FROM golang:1.23 AS builder
 WORKDIR /app
 COPY . .
 # 下载依赖
+ENV GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
+
 RUN go mod download
 # 编译
 RUN CGO_ENABLED=0 GOOS=linux go build -o ddbr-gateway .

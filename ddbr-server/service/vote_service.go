@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"zhamghaoran/ddbr-server/infra"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
 )
@@ -14,7 +15,7 @@ func RequestVote(ctx context.Context, req *sever.RequestVoteReq) (resp *sever.Re
 	}
 
 	// 获取Raft状态
-	raftState := GetRaftState()
+	raftState := infra.GetRaftState()
 
 	// 加锁保护并发访问
 	raftState.mu.Lock()

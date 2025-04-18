@@ -41,11 +41,9 @@ struct RegisterGatewayReq {
 
 }
 struct SetLeaderResp {
-    1: list<string> severHostSever
-
+    1: string MasterHost
 }
 struct SetLeaderReq {
-    1:string leaderHost
 }
 service Gateway {
     SetResponse Set(1: SetRequest req),
