@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
 	"github.com/cloudwego/kitex/server"
 
+	"zhamghaoran/ddbr-server/client"
 	"zhamghaoran/ddbr-server/configs"
 	"zhamghaoran/ddbr-server/infra"
 	ddbr "zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever/server"
@@ -22,28 +22,23 @@ func main() {
 	configPath := flag.String("config", "configs/server_config.json", "配置文件路径")
 	master := flag.Bool("master", false, "是否为master节点")
 	flag.Parse()
-	// 初始化配置
-	err := configs.LoadConfig(*configPath)
-	if err != nil {
-		fmt.Printf("加载配置失败: %v\n", err)
-		os.Exit(1)
-	}
-	// 更新master标志
-	config := configs.GetConfig()
-	config.IsMaster = *master
-	// 初始化资源
+	// 初始化资源（会调用configs.LoadConfig加载配置）
 	if err := infra.InitializeResources(*configPath, *master); err != nil {
 		log.Log.Fatalf("初始化资源失败: %v", err)
 	}
 	// 设置优雅关闭
 	setupGracefulShutdown()
 	// 启动服务器
-	startServer(config)
+	startServer()
 }
 
 // startServer 启动RPC服务器
-func startServer(config *configs.Config) {
-	addr, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:"+config.Port)
+func startServer() {
+	// 获取配置
+	config := configs.GetConfig()
+	port := config.Port
+
+	addr, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:"+port)
 	code := thrift.NewThriftCodecWithConfig(thrift.FrugalRead | thrift.FrugalWrite)
 
 	// 创建服务实例
@@ -53,7 +48,7 @@ func startServer(config *configs.Config) {
 		server.WithServiceAddr(addr),
 	)
 
-	log.Log.Infof("服务器正在启动，监听端口: %s", config.Port)
+	log.Log.Infof("服务器正在启动，监听端口: %s", port)
 
 	// 启动服务
 	if err := svr.Run(); err != nil {
@@ -86,5 +81,6 @@ func cleanup() {
 	}
 
 	log.Log.Info("正在关闭连接...")
-	// TODO: 关闭其他资源
+	// 清除客户端缓存
+	client.ClearClientCache()
 }

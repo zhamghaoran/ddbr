@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"zhamghaoran/ddbr-server/configs"
 	"zhamghaoran/ddbr-server/infra"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
@@ -119,8 +120,8 @@ func SyncLogs(ctx context.Context, req *sever.LogSyncReq) (resp *sever.LogSyncRe
 
 // isLeader 判断当前节点是否是Leader
 func isLeader() bool {
-	// TODO: 基于实际的Leader选举逻辑判断
-	return false
+	// 使用配置中的IsMaster标志
+	return configs.IsMaster()
 }
 
 // applyLogToStateMachine 将日志应用到状态机

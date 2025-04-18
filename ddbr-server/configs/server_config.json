@@ -1,0 +1,16 @@
+{
+  "node_id": null,
+  "cluster_id": 1,
+  "peers": [],
+  "port": "8082",
+  "gateway_host": "localhost:8080",
+  "is_master": false,
+  "master_addr": "",
+  "election_timeout": 1000,
+  "heartbeat_period": 100,
+  "data_dir": "data",
+  "snapshot_count": 10000,
+  "log_level": "info",
+  "log_dir": "logs",
+  "metrics_enabled": true
+} 
