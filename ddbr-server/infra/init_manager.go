@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,6 +13,9 @@ import (
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever"
 	"zhamghaoran/ddbr-server/log"
+
+	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/google/uuid"
 )
 
 // InitManager 初始化管理器
@@ -86,11 +87,9 @@ func (im *InitManager) ModifyServerHost(serverHost []string) {
 func (im *InitManager) InitializeRaftState() error {
 	im.mu.Lock()
 	defer im.mu.Unlock()
-
 	if im.isInit {
 		return nil // 已经初始化
 	}
-
 	if im.config == nil {
 		// 如果没有加载配置，使用默认配置
 		im.config = &RaftConfig{
@@ -204,53 +203,63 @@ func InitializeResources(configPath string, master bool) error {
 	if err := im.InitializeRaftState(); err != nil {
 		return fmt.Errorf("failed to initialize Raft state: %v", err)
 	}
-	// 向gateway 节点和 master 节点注册
-	if err := RegisterNode(); err != nil {
+	// 向gateway节点和master节点注册
+	resp, err := RegisterNodeAndGetInfo()
+	if err != nil {
 		return fmt.Errorf("failed to register node: %v", err)
 	}
+	// 如果不是master节点，处理日志同步
+	if !master && resp != nil && resp.LeaderId > 0 {
+		// 启动日志同步协程
+		go syncLogsWithLeaderAsync(resp.LeaderId)
+		// 更新本地集群配置
+		im.ModifyServerHost(resp.SeverHostSever)
 
-	// 如果不是master节点，尝试获取集群信息并同步日志
-	if !master {
-		// 获取当前配置
-		config := GetServerConfig()
-
-		// 从Gateway获取集群信息
-		if err := updateClusterInfo(config); err != nil {
-			log.Log.Warnf("Join cluster failed: %v, will retry later", err)
-			// 失败不阻止启动，后续会定期重试
-		}
+		log.Log.Infof("Successfully joined the cluster, leader: %d", resp.LeaderId)
 	}
 
 	log.Log.Info("raft state initialized")
 	return nil
 }
 
-// updateClusterInfo 更新集群信息并启动日志同步
-func updateClusterInfo(config RaftConfig) error {
+// RegisterNodeAndGetInfo 向Gateway注册并获取集群信息
+func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
+	// 注册服务到网关
+	config := GetServerConfig()
 	gatewayClient := client.GetGatewayClient()
-	// 注册服务并获取集群信息
-	resp, err := gatewayClient.RegisterSever(context.Background(), &gateway.RegisterSeverReq{
-		ServerHost: config.Port, // 使用配置的端口
+	if gatewayClient == nil {
+		return nil, fmt.Errorf("gateway client is nil")
+	}
+	ctx := context.Background()
+
+	// 向Gateway注册
+	resp, err := gatewayClient.RegisterSever(ctx, &gateway.RegisterSeverReq{
+		ServerHost: config.Port,
 		NodeId:     *config.NodeId,
-		IsNew:      true, // 标记为新节点
+		IsNew:      !config.IsMaster, // 如果不是master，则标记为新节点
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// 获取集群信息
-	if resp.Common != nil && resp.Common.RespCode == 0 {
-		// 更新本地集群配置
-		im := GetInitManager()
-		im.ModifyServerHost(resp.SeverHostSever)
-
-		// 启动日志同步协程
-		go syncLogsWithLeaderAsync(resp.LeaderId)
-
-		log.Log.Infof("Successfully joined the cluster, leader: %d, peers: %v",
-			resp.LeaderId, resp.SeverHostSever)
+	// 如果是master，向网关注册成为leader
+	if config.IsMaster {
+		_, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
+		if err != nil {
+			log.Log.Errorf("Failed to set leader: %v", err)
+			return resp, err
+		}
+	} else if resp != nil && resp.LeaderHost != "" {
+		// 如果不是master且获取到了leader地址，向master注册
+		masterClient := client.GetLeaderClient(resp.LeaderHost)
+		if masterClient != nil {
+			_, err := masterClient.JoinCluster(ctx, &sever.JoinClusterReq{})
+			if err != nil {
+				log.Log.Errorf("Failed to join cluster: %v", err)
+				return resp, err
+			}
+		}
 	}
-
-	return nil
+	return resp, nil
 }
 
 // syncLogsWithLeaderAsync 异步与Leader同步日志
@@ -266,32 +275,4 @@ func syncLogsWithLeaderAsync(leaderId int64) {
 	if err != nil {
 		log.Log.Warnf("Failed to sync logs with leader: %v", err)
 	}
-}
-
-func RegisterNode() error {
-	// 注册服务到网关
-	config := GetServerConfig()
-	gatewayClient := client.GetGatewayClient()
-	if gatewayClient == nil {
-		return fmt.Errorf("gateway client is nil")
-	}
-	ctx := context.Background()
-	resp, err := gatewayClient.RegisterSever(ctx, &gateway.RegisterSeverReq{})
-	// 自己是master，向网关注册
-	if config.IsMaster {
-		_, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		masterClient := client.GetLeaderClient(resp.GetLeaderHost())
-		_, err := masterClient.JoinCluster(ctx, &sever.JoinClusterReq{})
-		if err != nil {
-			return err
-		}
-	}
-	if err != nil {
-		panic(err)
-	}
-	return err
 }

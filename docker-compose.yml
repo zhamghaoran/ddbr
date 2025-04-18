@@ -45,7 +45,7 @@ services:
       retries: 3
   
   # Server节点
-  ddbr-server:
+  ddbr-server-master:
     build:
       context: ./ddbr-server
       dockerfile: Dockerfile
@@ -62,6 +62,27 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+  # Server节点
+  ddbr-server-slave:
+    build:
+      context: ./ddbr-server
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      - KITEX_LOG_LEVEL=debug
+    networks:
+      - ddbr-network
+    volumes:
+      - server-data:/app/data
+    depends_on:
+      gateway-master:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "8080" ]
       interval: 5s
       timeout: 5s
       retries: 3

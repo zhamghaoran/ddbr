@@ -89,7 +89,7 @@ func notifyLeaderForNewNode(nodeId int64, nodeHost string) {
 }
 
 func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway.RegisterSeverResp, error) {
-	resp = gateway.NewRegisterSeverResp()
+	resp := gateway.NewRegisterSeverResp()
 	svrRepo := repo.GetSeverRepo()
 
 	// 添加服务器到集群
