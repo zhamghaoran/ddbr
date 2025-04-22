@@ -37,6 +37,7 @@ func main() {
 
 	// 获取最终状态
 	config := configs.GetConfig()
+
 	if config.IsMaster {
 		log.Log.Infof("节点成功启动为 LEADER 节点")
 	} else {

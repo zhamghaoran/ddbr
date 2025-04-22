@@ -18,6 +18,9 @@ COPY --from=builder /app/ddbr-server .
 COPY --from=builder /app/server_config.json .
 # 创建数据目录
 RUN mkdir -p /app/data
+
+# 设置环境变量
+ENV DEBUG_LEVEL=info
 # 暴露端口
 EXPOSE 8082
 

@@ -79,7 +79,7 @@ func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	}
 	// 获取配置并设置master标志
 	config := configs.GetConfig()
-	config.IsMaster = master
+	configs.SetIsMaster(master)
 
 	// 更新数据路径
 	im.dataPath = config.DataDir
@@ -290,7 +290,7 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 		NodeId:     raftState.GetNodeId(),
 		IsNew:      !config.IsMaster, // 如果不是master，则标记为新节点
 	})
-	log.Log.Infof("rpc call RegisterSever resp is : %+v", *resp)
+	log.Log.Infof("获取到网关响应: %+v", *resp)
 	if err != nil {
 		log.Log.Errorf("Failed to register sever: %v", err)
 		return nil, err
@@ -302,31 +302,29 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 	if config.IsMaster {
 		// 只有当从网关获取的leader ID为-1（即还没有leader）时，才设置自己为leader
 		if resp.LeaderId == -1 || resp.LeaderId == 0 {
-			log.Log.Infof("Registering as leader since no leader exists yet (leaderId=%d)", resp.LeaderId)
+			log.Log.Infof("准备注册为leader节点，当前leaderId=%d", resp.LeaderId)
+
 			setResp, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
 			if err != nil {
 				// 如果错误消息包含"leader already exists"，说明同时有其他节点也在注册为leader
 				if strings.Contains(err.Error(), "leader already exists") {
-					log.Log.Warnf("Another node became leader first, switching to follower mode: %v", err)
-					config.IsMaster = false
-					raftState.IsMaster = false
+					log.Log.Warnf("发现已存在leader，切换为follower模式: %v", err)
+					configs.SetIsMaster(false)
 				} else {
-					log.Log.Errorf("Failed to set leader: %v", err)
+					log.Log.Errorf("注册leader失败: %v", err)
 					return resp, err
 				}
 			} else {
-				log.Log.Infof("Successfully registered as leader, master address: %s", setResp.GetMasterHost())
+				log.Log.Infof("成功注册为leader节点，master地址: %s", setResp.GetMasterHost())
 			}
 		} else {
-			log.Log.Warnf("This node is configured as master but a leader already exists (ID: %d). Operating as follower.", resp.LeaderId)
-			// 设置当前节点为follower而不是leader
-			config.IsMaster = false
-			raftState.IsMaster = false
+			log.Log.Warnf("当前节点配置为master但已存在leader (ID: %d)，以follower模式运行", resp.LeaderId)
+			configs.SetIsMaster(false)
 		}
 	}
 
 	// 如果不是master并且网关返回了leader地址，向leader注册
-	if !config.IsMaster && resp != nil && resp.LeaderHost != "" {
+	if !configs.IsMaster() && resp != nil && resp.LeaderHost != "" {
 		// 更新主节点地址
 		configs.SetMasterAddr(resp.LeaderHost)
 
@@ -334,7 +332,7 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 		if masterClient != nil {
 			_, err := masterClient.JoinCluster(ctx, &sever.JoinClusterReq{})
 			if err != nil {
-				log.Log.Errorf("Failed to join cluster: %v", err)
+				log.Log.Errorf("加入集群失败: %v", err)
 				return resp, err
 			}
 		}

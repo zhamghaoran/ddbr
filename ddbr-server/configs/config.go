@@ -238,3 +238,15 @@ func SetNodeID(id int64) {
 
 	globalConfig.NodeID = thrift.Int64Ptr(id)
 }
+
+// 设置是否为主节点
+func SetIsMaster(isMaster bool) {
+	configLock.Lock()
+	defer configLock.Unlock()
+
+	if !loaded {
+		panic("Config not loaded")
+	}
+
+	globalConfig.IsMaster = isMaster
+}

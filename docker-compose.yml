@@ -53,6 +53,7 @@ services:
       - "8082:8080"
     environment:
       - KITEX_LOG_LEVEL=debug
+      - DEBUG_LEVEL=debug
     command: -master=true -config=/app/server_config.json
     networks:
       - ddbr-network
