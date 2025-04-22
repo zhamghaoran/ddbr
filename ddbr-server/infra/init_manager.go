@@ -324,7 +324,7 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 	}
 
 	// 如果不是master并且网关返回了leader地址，向leader注册
-	if !configs.IsMaster() && resp != nil && resp.LeaderHost != "" {
+	if !configs.IsMaster() && resp.LeaderHost != "" {
 		// 更新主节点地址
 		configs.SetMasterAddr(resp.LeaderHost)
 
@@ -335,6 +335,7 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 				log.Log.Errorf("加入集群失败: %v", err)
 				return resp, err
 			}
+			log.Log.Infof("follower join cluster, leader host: %v", resp.LeaderHost)
 		}
 	}
 	return resp, nil

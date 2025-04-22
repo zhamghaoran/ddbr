@@ -130,7 +130,7 @@ func RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq) (*gateway
 
 	// 返回当前集群信息
 	resp.SeverHostSever = svrRepo.GetAllSevers()
-
+	resp.LeaderHost = repo.GetLeaderHost()
 	// 如果是新节点，触发日志同步通知
 	if req.IsNew {
 		notifyLeaderForNewNode(req.NodeId, host)
