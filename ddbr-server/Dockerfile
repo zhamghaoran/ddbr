@@ -21,4 +21,5 @@ RUN mkdir -p /app/data
 # 暴露端口
 EXPOSE 8082
 
-ENTRYPOINT ["./ddbr-server","-config","/app/server_config.json"]
+# 修改为使用默认CMD，这样docker-compose中的command可以被正确应用
+ENTRYPOINT ["./ddbr-server"]

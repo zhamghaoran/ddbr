@@ -30,6 +30,7 @@ func (s *GatewayImpl) RegisterSever(ctx context.Context, req *gateway.RegisterSe
 		log.Log.CtxErrorf(ctx, "register sever error: %v", err)
 		return resp, err
 	}
+	log.Log.CtxInfof(ctx, "RegisterSever req is :%+v,resp is :%+v", req, resp)
 	return resp, nil
 }
 
@@ -39,6 +40,8 @@ func (s *GatewayImpl) RegisterGateway(ctx context.Context, req *gateway.Register
 	if err != nil {
 		log.Log.CtxErrorf(ctx, "RegisterGatewayService error: %v", err)
 	}
+	log.Log.CtxInfof(ctx, "RegisterGateway req is :%+v,resp is :%+v", req, resp)
+
 	return resp, err
 }
 
@@ -49,6 +52,7 @@ func (s *GatewayImpl) SetLeader(ctx context.Context, req *gateway.SetLeaderReq) 
 		log.Log.CtxErrorf(ctx, "SetLeader error: %v", err)
 		return nil, err
 	}
+	log.Log.CtxInfof(ctx, "SetLeader req is :%+v,resp is :%+v", req, resp)
 	return resp, err
 
 }

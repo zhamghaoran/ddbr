@@ -84,15 +84,8 @@ func LoadConfig(configPath string) error {
 		config.SnapshotCount = 10000
 	}
 
-	// 确保数据目录存在
-	if err := os.MkdirAll(config.DataDir, 0755); err != nil {
-		return fmt.Errorf("failed to create data directory: %v", err)
-	}
-
-	// 确保日志目录存在
-	if err := os.MkdirAll(config.LogDir, 0755); err != nil {
-		return fmt.Errorf("failed to create log directory: %v", err)
-	}
+	// 目录创建在InitManager中处理，不在这里处理
+	// 因为这里是配置加载，不应该处理文件系统操作
 
 	globalConfig = &config
 	loaded = true

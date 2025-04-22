@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 	"zhamghaoran/ddbr-server/client"
@@ -74,7 +75,7 @@ func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	defer im.mu.Unlock()
 	// 首先使用configs包加载配置
 	if err := configs.LoadConfig(configPath); err != nil {
-		return err
+		return fmt.Errorf("加载配置文件失败: %v", err)
 	}
 	// 获取配置并设置master标志
 	config := configs.GetConfig()
@@ -83,8 +84,25 @@ func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	// 更新数据路径
 	im.dataPath = config.DataDir
 
-	// 更新RaftState
-	raftConfig := config.ToRaftConfig().(RaftConfig)
+	// 确保数据目录存在
+	if err := os.MkdirAll(im.dataPath, 0755); err != nil {
+		return fmt.Errorf("创建数据目录 '%s' 失败: %v", im.dataPath, err)
+	}
+
+	// 更新RaftState - 不使用类型断言，直接从config构建RaftConfig
+	raftConfig := RaftConfig{
+		NodeId:          config.NodeID,
+		ClusterId:       config.ClusterID,
+		Peers:           config.Peers,
+		ElectionTimeout: config.ElectionTimeout,
+		HeartbeatPeriod: config.HeartbeatPeriod,
+		DataDir:         config.DataDir,
+		SnapshotCount:   config.SnapshotCount,
+		Port:            config.Port,
+		GatewayHost:     config.GatewayHost,
+		IsMaster:        config.IsMaster,
+		MasterAddr:      config.MasterAddr,
+	}
 	GetRaftState().UpdateConfig(raftConfig)
 
 	return nil
@@ -218,7 +236,11 @@ func (im *InitManager) JoinCluster() error {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			SyncLogsWithLeader(ctx, resp.LeaderId)
+			err := SyncLogsWithLeader(ctx, resp.LeaderId)
+			if err != nil {
+				log.Log.Errorf("failed to sync logs: %v", err)
+				return
+			}
 		}()
 		im.SetJoinedCluster(true)
 		log.Log.Infof("Successfully joined the cluster, leader: %d", resp.LeaderId)
@@ -268,23 +290,47 @@ func RegisterNodeAndGetInfo() (*gateway.RegisterSeverResp, error) {
 		NodeId:     raftState.GetNodeId(),
 		IsNew:      !config.IsMaster, // 如果不是master，则标记为新节点
 	})
+	log.Log.Infof("rpc call RegisterSever resp is : %+v", *resp)
 	if err != nil {
+		log.Log.Errorf("Failed to register sever: %v", err)
 		return nil, err
 	}
-	// 如果是master，向网关注册成为leader
-	if config.IsMaster {
-		_, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
-		if err != nil {
-			log.Log.Errorf("Failed to set leader: %v", err)
-			return resp, err
-		}
-	} else if resp != nil && resp.LeaderHost != "" {
-		// 如果不是master且获取到了leader地址，向master注册
-		masterClient := client.GetLeaderClient(resp.LeaderHost)
 
+	// 两种情况：
+	// 1. 如果当前节点是master，向网关注册成为leader
+	// 2. 如果当前节点不是master，且gateway已经有leader，则向leader注册
+	if config.IsMaster {
+		// 只有当从网关获取的leader ID为-1（即还没有leader）时，才设置自己为leader
+		if resp.LeaderId == -1 || resp.LeaderId == 0 {
+			log.Log.Infof("Registering as leader since no leader exists yet (leaderId=%d)", resp.LeaderId)
+			setResp, err := gatewayClient.SetLeader(ctx, &gateway.SetLeaderReq{})
+			if err != nil {
+				// 如果错误消息包含"leader already exists"，说明同时有其他节点也在注册为leader
+				if strings.Contains(err.Error(), "leader already exists") {
+					log.Log.Warnf("Another node became leader first, switching to follower mode: %v", err)
+					config.IsMaster = false
+					raftState.IsMaster = false
+				} else {
+					log.Log.Errorf("Failed to set leader: %v", err)
+					return resp, err
+				}
+			} else {
+				log.Log.Infof("Successfully registered as leader, master address: %s", setResp.GetMasterHost())
+			}
+		} else {
+			log.Log.Warnf("This node is configured as master but a leader already exists (ID: %d). Operating as follower.", resp.LeaderId)
+			// 设置当前节点为follower而不是leader
+			config.IsMaster = false
+			raftState.IsMaster = false
+		}
+	}
+
+	// 如果不是master并且网关返回了leader地址，向leader注册
+	if !config.IsMaster && resp != nil && resp.LeaderHost != "" {
 		// 更新主节点地址
 		configs.SetMasterAddr(resp.LeaderHost)
 
+		masterClient := client.GetLeaderClient(resp.LeaderHost)
 		if masterClient != nil {
 			_, err := masterClient.JoinCluster(ctx, &sever.JoinClusterReq{})
 			if err != nil {

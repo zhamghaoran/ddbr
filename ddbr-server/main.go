@@ -22,10 +22,27 @@ func main() {
 	configPath := flag.String("config", "configs/server_config.json", "配置文件路径")
 	master := flag.Bool("master", false, "是否为master节点")
 	flag.Parse()
+	log.Log.Infof("当前节点状态:%v", *master)
+	// 检查配置文件是否存在
+	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
+		log.Log.Fatalf("配置文件不存在: %s", *configPath)
+	}
+
+	log.Log.Infof("启动节点，配置路径: %s, 是否为master: %v", *configPath, *master)
+
 	// 初始化资源（会调用configs.LoadConfig加载配置）
 	if err := infra.InitializeResources(*configPath, *master); err != nil {
 		log.Log.Fatalf("初始化资源失败: %v", err)
 	}
+
+	// 获取最终状态
+	config := configs.GetConfig()
+	if config.IsMaster {
+		log.Log.Infof("节点成功启动为 LEADER 节点")
+	} else {
+		log.Log.Infof("节点成功启动为 FOLLOWER 节点")
+	}
+
 	// 设置优雅关闭
 	setupGracefulShutdown()
 	// 启动服务器

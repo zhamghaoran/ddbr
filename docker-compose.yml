@@ -53,6 +53,7 @@ services:
       - "8082:8080"
     environment:
       - KITEX_LOG_LEVEL=debug
+    command: -master=true -config=/app/server_config.json
     networks:
       - ddbr-network
     volumes:
@@ -74,10 +75,11 @@ services:
       - "8083:8080"
     environment:
       - KITEX_LOG_LEVEL=debug
+    command: -master=false -config=/app/server_config.json
     networks:
       - ddbr-network
     volumes:
-      - server-data:/app/data
+      - server-slave-data:/app/data
     depends_on:
       gateway-master:
         condition: service_healthy
@@ -94,4 +96,5 @@ networks:
 volumes:
   gateway-data:
   gateway-slave-data:
-  server-data: 
+  server-data:
+  server-slave-data: 

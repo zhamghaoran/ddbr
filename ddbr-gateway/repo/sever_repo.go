@@ -129,3 +129,16 @@ func GetGatewayList() []string {
 	}
 	return gatewayList
 }
+
+// GetNodeMap 获取节点ID到地址的映射
+func (s *SeverRepo) GetNodeMap() map[int64]string {
+	s.info.mu.RLock()
+	defer s.info.mu.RUnlock()
+
+	// 返回一个副本，避免外部修改
+	result := make(map[int64]string)
+	for k, v := range s.info.nodeMap {
+		result[k] = v
+	}
+	return result
+}
