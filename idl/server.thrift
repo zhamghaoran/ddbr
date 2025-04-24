@@ -19,6 +19,7 @@ struct AppendEntriesReq {
     4: i64 prevLogTerm
     5: list<string> entries
     6: i64 leaderCommit
+    7: bool isPreCommit
 }
 struct AppendEntriesResp {
     1: i64 term
@@ -54,6 +55,8 @@ struct LogEntry {
     1: i64 term
     2: i64 index
     3: string command
+    4: bool preCommitted
+    5: bool isRead
 }
 
 // 键值存储相关结构体

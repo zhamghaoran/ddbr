@@ -127,6 +127,7 @@ type AppendEntriesReq struct {
 	PrevLogTerm  int64    `thrift:"prevLogTerm,4" frugal:"4,default,i64" json:"prevLogTerm"`
 	Entries      []string `thrift:"entries,5" frugal:"5,default,list<string>" json:"entries"`
 	LeaderCommit int64    `thrift:"leaderCommit,6" frugal:"6,default,i64" json:"leaderCommit"`
+	IsPreCommit  bool     `thrift:"isPreCommit,7" frugal:"7,default,bool" json:"isPreCommit"`
 }
 
 func NewAppendEntriesReq() *AppendEntriesReq {
@@ -159,6 +160,10 @@ func (p *AppendEntriesReq) GetEntries() (v []string) {
 func (p *AppendEntriesReq) GetLeaderCommit() (v int64) {
 	return p.LeaderCommit
 }
+
+func (p *AppendEntriesReq) GetIsPreCommit() (v bool) {
+	return p.IsPreCommit
+}
 func (p *AppendEntriesReq) SetTerm(val int64) {
 	p.Term = val
 }
@@ -177,6 +182,9 @@ func (p *AppendEntriesReq) SetEntries(val []string) {
 func (p *AppendEntriesReq) SetLeaderCommit(val int64) {
 	p.LeaderCommit = val
 }
+func (p *AppendEntriesReq) SetIsPreCommit(val bool) {
+	p.IsPreCommit = val
+}
 
 func (p *AppendEntriesReq) String() string {
 	if p == nil {
@@ -192,6 +200,7 @@ var fieldIDToName_AppendEntriesReq = map[int16]string{
 	4: "prevLogTerm",
 	5: "entries",
 	6: "leaderCommit",
+	7: "isPreCommit",
 }
 
 type AppendEntriesResp struct {
@@ -440,9 +449,11 @@ var fieldIDToName_LogSyncResp = map[int16]string{
 }
 
 type LogEntry struct {
-	Term    int64  `thrift:"term,1" frugal:"1,default,i64" json:"term"`
-	Index   int64  `thrift:"index,2" frugal:"2,default,i64" json:"index"`
-	Command string `thrift:"command,3" frugal:"3,default,string" json:"command"`
+	Term         int64  `thrift:"term,1" frugal:"1,default,i64" json:"term"`
+	Index        int64  `thrift:"index,2" frugal:"2,default,i64" json:"index"`
+	Command      string `thrift:"command,3" frugal:"3,default,string" json:"command"`
+	PreCommitted bool   `thrift:"preCommitted,4" frugal:"4,default,bool" json:"preCommitted"`
+	IsRead       bool   `thrift:"isRead,5" frugal:"5,default,bool" json:"isRead"`
 }
 
 func NewLogEntry() *LogEntry {
@@ -463,6 +474,14 @@ func (p *LogEntry) GetIndex() (v int64) {
 func (p *LogEntry) GetCommand() (v string) {
 	return p.Command
 }
+
+func (p *LogEntry) GetPreCommitted() (v bool) {
+	return p.PreCommitted
+}
+
+func (p *LogEntry) GetIsRead() (v bool) {
+	return p.IsRead
+}
 func (p *LogEntry) SetTerm(val int64) {
 	p.Term = val
 }
@@ -471,6 +490,12 @@ func (p *LogEntry) SetIndex(val int64) {
 }
 func (p *LogEntry) SetCommand(val string) {
 	p.Command = val
+}
+func (p *LogEntry) SetPreCommitted(val bool) {
+	p.PreCommitted = val
+}
+func (p *LogEntry) SetIsRead(val bool) {
+	p.IsRead = val
 }
 
 func (p *LogEntry) String() string {
@@ -484,6 +509,8 @@ var fieldIDToName_LogEntry = map[int16]string{
 	1: "term",
 	2: "index",
 	3: "command",
+	4: "preCommitted",
+	5: "isRead",
 }
 
 type SetReq struct {

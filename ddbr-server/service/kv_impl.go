@@ -98,6 +98,50 @@ func Get(ctx context.Context, req *sever.GetReq) (*sever.GetResp, error) {
 		return resp, nil
 	}
 
+	// 构造读取命令
+	cmd := fmt.Sprintf("get:%s", req.Key)
+
+	// 创建日志条目
+	raftState := infra.GetRaftState()
+	lastIndex := int64(0)
+	logs := raftState.GetLogs()
+	if len(logs) > 0 {
+		lastIndex = logs[len(logs)-1].Index
+	}
+
+	logEntry := &sever.LogEntry{
+		Term:    raftState.GetCurrentTerm(),
+		Index:   lastIndex + 1,
+		Command: cmd,
+		IsRead:  true, // 标记为读操作
+	}
+
+	// 追加日志条目到本地日志
+	logs = append(logs, logEntry)
+	raftState.SetLogs(logs)
+
+	// 使用两阶段提交复制日志到Follower节点
+	commitIndex, err := infra.ReplicateLogs(ctx, logEntry)
+	if err != nil {
+		resp.Success = false
+		resp.Value = ""
+		resp.Exists = false
+		resp.Common.RespCode = 1
+		resp.Common.Message = fmt.Sprintf("failed to replicate logs: %v", err)
+		return resp, nil
+	}
+
+	// 检查是否成功提交
+	if commitIndex < logEntry.Index {
+		// 没有足够的节点确认，无法提交
+		resp.Success = false
+		resp.Value = ""
+		resp.Exists = false
+		resp.Common.RespCode = 1
+		resp.Common.Message = "failed to commit log: not enough acknowledgements from followers"
+		return resp, nil
+	}
+
 	// 从状态机中读取值
 	value, exists := infra.GetStateMachine().Get(req.Key)
 
