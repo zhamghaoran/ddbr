@@ -142,9 +142,11 @@ func (im *InitManager) recoverFromStorage() error {
 	raftState := GetRaftState()
 	statePath := filepath.Join(raftState.DataDir, "raft_state.json")
 
+	log.Log.Infof("尝试从 %s 加载持久化状态", statePath)
 	data, err := ioutil.ReadFile(statePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
+			log.Log.Infof("状态文件不存在，从零开始")
 			return nil
 		}
 		return err
@@ -165,6 +167,35 @@ func (im *InitManager) recoverFromStorage() error {
 	raftState.SetVotedFor(state.VotedFor)
 	raftState.SetLogs(state.Logs)
 
+	// 在leader节点，将加载的日志应用到状态机
+	if configs.IsMaster() && len(state.Logs) > 0 {
+		log.Log.Infof("开始应用 %d 条日志到状态机", len(state.Logs))
+		lastApplied := raftState.GetLastApplied()
+
+		for _, entry := range state.Logs {
+			// 只应用尚未应用的日志
+			if entry.Index > lastApplied {
+				result, err := ApplyLogToStateMachine(*entry)
+				if err != nil {
+					log.Log.Warnf("应用日志条目 %d 失败: %v", entry.Index, err)
+					continue
+				}
+				log.Log.Infof("应用日志条目 %d 成功: %s → %s", entry.Index, entry.Command, result)
+
+				// 更新lastApplied
+				raftState.SetLastApplied(entry.Index)
+			}
+		}
+
+		// 更新commitIndex
+		if len(state.Logs) > 0 {
+			lastIndex := state.Logs[len(state.Logs)-1].Index
+			raftState.SetCommitIndex(lastIndex)
+			log.Log.Infof("更新commit索引为 %d", lastIndex)
+		}
+	}
+
+	log.Log.Infof("从存储中恢复了 %d 条日志记录", len(state.Logs))
 	return nil
 }
 

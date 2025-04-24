@@ -58,7 +58,7 @@ services:
     networks:
       - ddbr-network
     volumes:
-      - server-data:/app/data
+      - ./ddbr-server/data:/app/data
     depends_on:
       gateway-master:
         condition: service_healthy
@@ -80,9 +80,11 @@ services:
     networks:
       - ddbr-network
     volumes:
-      - server-slave-data:/app/data
+      - ./ddbr-server/data-slave:/app/data
     depends_on:
       gateway-master:
+        condition: service_healthy
+      ddbr-server-master:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "8080" ]
@@ -96,6 +98,4 @@ networks:
 
 volumes:
   gateway-data:
-  gateway-slave-data:
-  server-data:
-  server-slave-data: 
+  gateway-slave-data: 

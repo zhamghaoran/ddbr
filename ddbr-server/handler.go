@@ -26,8 +26,7 @@ func (s *ServerImpl) HeartBeat(ctx context.Context, req *sever.HeartbeatReq) (re
 
 // JoinCluster implements the ServerImpl interface.
 func (s *ServerImpl) JoinCluster(ctx context.Context, req *sever.JoinClusterReq) (resp *sever.JoinClusterResp, err error) {
-	// TODO: Your code here...
-	return
+	return service.JoinCluster(ctx, req)
 }
 
 // SyncLogs implements the ServerImpl interface.
