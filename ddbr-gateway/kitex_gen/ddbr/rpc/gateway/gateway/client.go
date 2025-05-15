@@ -13,6 +13,7 @@ import (
 type Client interface {
 	Set(ctx context.Context, req *gateway.SetRequest, callOptions ...callopt.Option) (r *gateway.SetResponse, err error)
 	Get(ctx context.Context, req *gateway.GetRequest, callOptions ...callopt.Option) (r *gateway.GetResponse, err error)
+	Delete(ctx context.Context, req *gateway.DeleteRequest, callOptions ...callopt.Option) (r *gateway.DeleteResponse, err error)
 	RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq, callOptions ...callopt.Option) (r *gateway.RegisterSeverResp, err error)
 	RegisterGateway(ctx context.Context, req *gateway.RegisterGatewayReq, callOptions ...callopt.Option) (r *gateway.RegisterGatewayResp, err error)
 	SetLeader(ctx context.Context, req *gateway.SetLeaderReq, callOptions ...callopt.Option) (r *gateway.SetLeaderResp, err error)
@@ -55,6 +56,11 @@ func (p *kGatewayClient) Set(ctx context.Context, req *gateway.SetRequest, callO
 func (p *kGatewayClient) Get(ctx context.Context, req *gateway.GetRequest, callOptions ...callopt.Option) (r *gateway.GetResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Get(ctx, req)
+}
+
+func (p *kGatewayClient) Delete(ctx context.Context, req *gateway.DeleteRequest, callOptions ...callopt.Option) (r *gateway.DeleteResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.Delete(ctx, req)
 }
 
 func (p *kGatewayClient) RegisterSever(ctx context.Context, req *gateway.RegisterSeverReq, callOptions ...callopt.Option) (r *gateway.RegisterSeverResp, err error) {

@@ -100,6 +100,11 @@ func (s *SeverRepo) GetLeaderId() int64 {
 
 	return s.info.leaderId
 }
+func (s *SeverRepo) GetLeaderHost() string {
+	s.info.mu.RLock()
+	defer s.info.mu.RUnlock()
+	return s.info.leaderHost
+}
 
 // 保留原有函数以保持兼容性
 func AddServer(host string) {

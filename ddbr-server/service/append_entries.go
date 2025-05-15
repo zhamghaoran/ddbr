@@ -39,17 +39,20 @@ func AppendEntries(ctx context.Context, req *sever.AppendEntriesReq) (*sever.App
 
 	// 检查前一个日志条目
 	if req.PrevLogIndex >= 0 {
+		// 将基于1的日志索引转换为基于0的切片索引
+		sliceIndex := int(req.PrevLogIndex) - 1
+
 		// 如果日志太短，不包含PrevLogIndex
-		if int(req.PrevLogIndex) >= len(logs) {
-			log.Log.Infof("Rejecting AppendEntries: log too short, prevLogIndex=%d, logLength=%d",
+		if req.PrevLogIndex > 0 && sliceIndex >= len(logs) {
+			log.Log.CtxInfof(ctx, "Rejecting AppendEntries: log too short, prevLogIndex=%d, logLength=%d",
 				req.PrevLogIndex, len(logs))
 			return resp, nil
 		}
 
 		// 如果日志中的任期与PrevLogTerm不匹配
-		if logs[req.PrevLogIndex].Term != req.PrevLogTerm {
-			log.Log.Infof("Rejecting AppendEntries: term mismatch at prevLogIndex=%d, expected=%d, actual=%d",
-				req.PrevLogIndex, req.PrevLogTerm, logs[req.PrevLogIndex].Term)
+		if req.PrevLogIndex > 0 && logs[sliceIndex].Term != req.PrevLogTerm {
+			log.Log.CtxInfof(ctx, "Rejecting AppendEntries: term mismatch at prevLogIndex=%d, expected=%d, actual=%d",
+				req.PrevLogIndex, req.PrevLogTerm, logs[sliceIndex].Term)
 			return resp, nil
 		}
 	}
@@ -64,6 +67,7 @@ func AppendEntries(ctx context.Context, req *sever.AppendEntriesReq) (*sever.App
 		// 创建新日志条目
 		newEntries := make([]*sever.LogEntry, 0, len(req.Entries))
 		nextIndex := req.PrevLogIndex + 1
+		nextSliceIndex := int(req.PrevLogIndex) // 已经考虑到日志索引从1开始，切片索引从0开始的转换
 
 		for i, entryStr := range req.Entries {
 			// 这里应该使用正确的反序列化逻辑
@@ -77,9 +81,9 @@ func AppendEntries(ctx context.Context, req *sever.AppendEntriesReq) (*sever.App
 		}
 
 		// 规则3：如果现有日志与Leader冲突，删除并替换
-		if int(nextIndex) < len(logs) {
+		if nextSliceIndex < len(logs) {
 			// 截断日志
-			logs = logs[:nextIndex]
+			logs = logs[:nextSliceIndex]
 		}
 
 		// 追加新日志

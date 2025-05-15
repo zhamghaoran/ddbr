@@ -43,7 +43,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-  
+
   # Server节点
   ddbr-server-master:
     build:
@@ -51,9 +51,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8080"
-    environment:
-      - KITEX_LOG_LEVEL=debug
-      - DEBUG_LEVEL=debug
+#    environment:
+#      - KITEX_LOG_LEVEL=debug
+#      - DEBUG_LEVEL=debug
     command: -master=true -config=/app/server_config.json
     networks:
       - ddbr-network
@@ -98,4 +98,4 @@ networks:
 
 volumes:
   gateway-data:
-  gateway-slave-data: 
+  gateway-slave-data:

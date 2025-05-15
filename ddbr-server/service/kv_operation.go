@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/common"
 )
 
@@ -19,24 +18,3 @@ type KVOperationResp struct {
 }
 
 // KVOperation 处理键值操作请求
-func KVOperation(ctx context.Context, req *KVOperationReq) (*KVOperationResp, error) {
-	resp := &KVOperationResp{
-		Success: true,
-		Common: &common.Common{
-			RespCode: 0,
-			Message:  "success",
-		},
-	}
-
-	// 执行命令
-	result, err := ExecuteCommand(ctx, req.Command)
-	if err != nil {
-		resp.Success = false
-		resp.Common.RespCode = 1
-		resp.Common.Message = err.Error()
-		return resp, nil
-	}
-
-	resp.Result = result
-	return resp, nil
-}

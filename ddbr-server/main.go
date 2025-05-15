@@ -59,11 +59,13 @@ func startServer() {
 	addr, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:"+port)
 	code := thrift.NewThriftCodecWithConfig(thrift.FrugalRead | thrift.FrugalWrite)
 
-	// 创建服务实例
+	// 创建服务实例，添加日志中间件
 	svr := ddbr.NewServer(
 		new(ServerImpl),
 		server.WithPayloadCodec(code),
 		server.WithServiceAddr(addr),
+		//server.WithMiddleware(middleware.LogMiddleware()), // 添加详细日志中间件
+		// 如果日志太多，可以使用简化版中间件：server.WithMiddleware(middleware.SimplifiedLogMiddleware()),
 	)
 
 	log.Log.Infof("服务器正在启动，监听端口: %s", port)

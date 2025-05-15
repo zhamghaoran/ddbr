@@ -9,8 +9,10 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o ddbr-gateway .
 # 使用轻量级基础镜像
 FROM alpine:latest
-# 安装基本工具
-RUN apk --no-cache add ca-certificates netcat-openbsd
+# 安装基本工具和tzdata时区包
+RUN apk --no-cache add ca-certificates netcat-openbsd tzdata
+# 设置时区为中国时区
+ENV TZ=Asia/Shanghai
 WORKDIR /app
 COPY --from=builder /app/ddbr-gateway .
 # 创建数据目录

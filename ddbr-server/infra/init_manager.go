@@ -81,6 +81,9 @@ func (im *InitManager) LoadConfig(configPath string, master bool) error {
 	config := configs.GetConfig()
 	configs.SetIsMaster(master)
 
+	// 重新获取配置，确保使用最新的IsMaster值
+	config = configs.GetConfig()
+
 	// 更新数据路径
 	im.dataPath = config.DataDir
 
@@ -100,10 +103,15 @@ func (im *InitManager) LoadConfig(configPath string, master bool) error {
 		SnapshotCount:   config.SnapshotCount,
 		Port:            config.Port,
 		GatewayHost:     config.GatewayHost,
-		IsMaster:        config.IsMaster,
+		IsMaster:        config.IsMaster, // 使用最新的IsMaster值
 		MasterAddr:      config.MasterAddr,
 	}
-	GetRaftState().UpdateConfig(raftConfig)
+
+	// 确保RaftState的master状态与配置一致
+	raftState := GetRaftState()
+	raftState.UpdateConfig(raftConfig)
+
+	log.Log.Infof("已更新RaftState，IsMaster=%v", raftState.IsMaster)
 
 	return nil
 }

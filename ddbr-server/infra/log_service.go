@@ -16,7 +16,7 @@ func SyncLogsWithLeader(ctx context.Context, leaderId int64) error {
 
 	// 如果自己就是Leader，不需要同步
 	raftState := GetRaftState()
-	if raftState.GetNodeId() == leaderId {
+	if raftState.IsMaster {
 		log.Log.Info("This node is leader, no need to sync logs")
 		return nil
 	}

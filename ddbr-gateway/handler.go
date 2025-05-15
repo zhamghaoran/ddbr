@@ -12,15 +12,17 @@ type GatewayImpl struct{}
 
 // Set implements the GatewayImpl interface.
 func (s *GatewayImpl) Set(ctx context.Context, req *gateway.SetRequest) (resp *gateway.SetResponse, err error) {
-	// TODO: Your code here...
-	return
+	return service.Set(ctx, req)
 }
 
 // Get implements the GatewayImpl interface.
 func (s *GatewayImpl) Get(ctx context.Context, req *gateway.GetRequest) (resp *gateway.GetResponse, err error) {
-	resp = gateway.NewGetResponse()
-	resp.Val = "pong"
-	return
+	return service.Get(ctx, req)
+}
+
+// Delete implements the GatewayImpl interface.
+func (s *GatewayImpl) Delete(ctx context.Context, req *gateway.DeleteRequest) (resp *gateway.DeleteResponse, err error) {
+	return service.Delete(ctx, req)
 }
 
 // RegisterSever implements the GatewayImpl interface.
@@ -54,5 +56,4 @@ func (s *GatewayImpl) SetLeader(ctx context.Context, req *gateway.SetLeaderReq) 
 	}
 	log.Log.CtxInfof(ctx, "SetLeader req is :%+v,resp is :%+v", req, resp)
 	return resp, err
-
 }

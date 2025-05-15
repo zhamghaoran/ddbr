@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -141,11 +142,12 @@ func ApplyLogToStateMachine(entry sever.LogEntry) (string, error) {
 
 	// 执行命令
 	var result string
+	ctx := context.Background()
 	switch cmd.Type {
 	case CommandTypeSet:
 		sm.Set(cmd.Key, cmd.Value)
 		result = fmt.Sprintf("OK")
-		log.Log.Infof("StateMachine SET: %s = %s", cmd.Key, cmd.Value)
+		log.Log.CtxInfof(ctx, "StateMachine SET: %s = %s", cmd.Key, cmd.Value)
 	case CommandTypeGet:
 		value, exists := sm.Get(cmd.Key)
 		if !exists {
@@ -153,11 +155,11 @@ func ApplyLogToStateMachine(entry sever.LogEntry) (string, error) {
 		} else {
 			result = value
 		}
-		log.Log.Infof("StateMachine GET: %s = %s", cmd.Key, result)
+		log.Log.CtxInfof(ctx, "StateMachine GET: %s = %s", cmd.Key, result)
 	case CommandTypeDelete:
 		sm.Delete(cmd.Key)
 		result = "OK"
-		log.Log.Infof("StateMachine DELETE: %s", cmd.Key)
+		log.Log.CtxInfof(ctx, "StateMachine DELETE: %s", cmd.Key)
 	default:
 		return "", fmt.Errorf("unknown command type: %s", cmd.Type)
 	}

@@ -27,6 +27,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
+	"Delete": kitex.NewMethodInfo(
+		deleteHandler,
+		newGatewayDeleteArgs,
+		newGatewayDeleteResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
 	"RegisterSever": kitex.NewMethodInfo(
 		registerSeverHandler,
 		newGatewayRegisterSeverArgs,
@@ -150,6 +157,24 @@ func newGatewayGetResult() interface{} {
 	return gateway.NewGatewayGetResult()
 }
 
+func deleteHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*gateway.GatewayDeleteArgs)
+	realResult := result.(*gateway.GatewayDeleteResult)
+	success, err := handler.(gateway.Gateway).Delete(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newGatewayDeleteArgs() interface{} {
+	return gateway.NewGatewayDeleteArgs()
+}
+
+func newGatewayDeleteResult() interface{} {
+	return gateway.NewGatewayDeleteResult()
+}
+
 func registerSeverHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	realArg := arg.(*gateway.GatewayRegisterSeverArgs)
 	realResult := result.(*gateway.GatewayRegisterSeverResult)
@@ -229,6 +254,16 @@ func (p *kClient) Get(ctx context.Context, req *gateway.GetRequest) (r *gateway.
 	_args.Req = req
 	var _result gateway.GatewayGetResult
 	if err = p.c.Call(ctx, "Get", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) Delete(ctx context.Context, req *gateway.DeleteRequest) (r *gateway.DeleteResponse, err error) {
+	var _args gateway.GatewayDeleteArgs
+	_args.Req = req
+	var _result gateway.GatewayDeleteResult
+	if err = p.c.Call(ctx, "Delete", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

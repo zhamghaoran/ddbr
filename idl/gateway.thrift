@@ -23,6 +23,16 @@ struct GetResponse {
     1: string val,
     255: common.Common common
 }
+
+struct DeleteRequest {
+    1: string key
+    2: common.Password password
+}
+
+struct DeleteResponse {
+    1: common.Common common
+}
+
 struct RegisterSeverReq {
     1: string serverHost
     2: i64 nodeId
@@ -52,6 +62,7 @@ struct SetLeaderReq {
 service Gateway {
     SetResponse Set(1: SetRequest req),
     GetResponse Get(1: GetRequest req),
+    DeleteResponse Delete(1: DeleteRequest req),
     RegisterSeverResp RegisterSever(1: RegisterSeverReq req)
     RegisterGatewayResp RegisterGateway(1: RegisterGatewayReq req)
     SetLeaderResp SetLeader(1: SetLeaderReq req)

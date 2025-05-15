@@ -196,6 +196,91 @@ var fieldIDToName_GetResponse = map[int16]string{
 	255: "common",
 }
 
+type DeleteRequest struct {
+	Key      string           `thrift:"key,1" frugal:"1,default,string" json:"key"`
+	Password *common.Password `thrift:"password,2" frugal:"2,default,common.Password" json:"password"`
+}
+
+func NewDeleteRequest() *DeleteRequest {
+	return &DeleteRequest{}
+}
+
+func (p *DeleteRequest) InitDefault() {
+}
+
+func (p *DeleteRequest) GetKey() (v string) {
+	return p.Key
+}
+
+var DeleteRequest_Password_DEFAULT *common.Password
+
+func (p *DeleteRequest) GetPassword() (v *common.Password) {
+	if !p.IsSetPassword() {
+		return DeleteRequest_Password_DEFAULT
+	}
+	return p.Password
+}
+func (p *DeleteRequest) SetKey(val string) {
+	p.Key = val
+}
+func (p *DeleteRequest) SetPassword(val *common.Password) {
+	p.Password = val
+}
+
+func (p *DeleteRequest) IsSetPassword() bool {
+	return p.Password != nil
+}
+
+func (p *DeleteRequest) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteRequest(%+v)", *p)
+}
+
+var fieldIDToName_DeleteRequest = map[int16]string{
+	1: "key",
+	2: "password",
+}
+
+type DeleteResponse struct {
+	Common *common.Common `thrift:"common,1" frugal:"1,default,common.Common" json:"common"`
+}
+
+func NewDeleteResponse() *DeleteResponse {
+	return &DeleteResponse{}
+}
+
+func (p *DeleteResponse) InitDefault() {
+}
+
+var DeleteResponse_Common_DEFAULT *common.Common
+
+func (p *DeleteResponse) GetCommon() (v *common.Common) {
+	if !p.IsSetCommon() {
+		return DeleteResponse_Common_DEFAULT
+	}
+	return p.Common
+}
+func (p *DeleteResponse) SetCommon(val *common.Common) {
+	p.Common = val
+}
+
+func (p *DeleteResponse) IsSetCommon() bool {
+	return p.Common != nil
+}
+
+func (p *DeleteResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteResponse(%+v)", *p)
+}
+
+var fieldIDToName_DeleteResponse = map[int16]string{
+	1: "common",
+}
+
 type RegisterSeverReq struct {
 	ServerHost string `thrift:"serverHost,1" frugal:"1,default,string" json:"serverHost"`
 	NodeId     int64  `thrift:"nodeId,2" frugal:"2,default,i64" json:"nodeId"`
@@ -465,6 +550,8 @@ type Gateway interface {
 
 	Get(ctx context.Context, req *GetRequest) (r *GetResponse, err error)
 
+	Delete(ctx context.Context, req *DeleteRequest) (r *DeleteResponse, err error)
+
 	RegisterSever(ctx context.Context, req *RegisterSeverReq) (r *RegisterSeverResp, err error)
 
 	RegisterGateway(ctx context.Context, req *RegisterGatewayReq) (r *RegisterGatewayResp, err error)
@@ -621,6 +708,82 @@ func (p *GatewayGetResult) String() string {
 }
 
 var fieldIDToName_GatewayGetResult = map[int16]string{
+	0: "success",
+}
+
+type GatewayDeleteArgs struct {
+	Req *DeleteRequest `thrift:"req,1" frugal:"1,default,DeleteRequest" json:"req"`
+}
+
+func NewGatewayDeleteArgs() *GatewayDeleteArgs {
+	return &GatewayDeleteArgs{}
+}
+
+func (p *GatewayDeleteArgs) InitDefault() {
+}
+
+var GatewayDeleteArgs_Req_DEFAULT *DeleteRequest
+
+func (p *GatewayDeleteArgs) GetReq() (v *DeleteRequest) {
+	if !p.IsSetReq() {
+		return GatewayDeleteArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *GatewayDeleteArgs) SetReq(val *DeleteRequest) {
+	p.Req = val
+}
+
+func (p *GatewayDeleteArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GatewayDeleteArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("GatewayDeleteArgs(%+v)", *p)
+}
+
+var fieldIDToName_GatewayDeleteArgs = map[int16]string{
+	1: "req",
+}
+
+type GatewayDeleteResult struct {
+	Success *DeleteResponse `thrift:"success,0,optional" frugal:"0,optional,DeleteResponse" json:"success,omitempty"`
+}
+
+func NewGatewayDeleteResult() *GatewayDeleteResult {
+	return &GatewayDeleteResult{}
+}
+
+func (p *GatewayDeleteResult) InitDefault() {
+}
+
+var GatewayDeleteResult_Success_DEFAULT *DeleteResponse
+
+func (p *GatewayDeleteResult) GetSuccess() (v *DeleteResponse) {
+	if !p.IsSetSuccess() {
+		return GatewayDeleteResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *GatewayDeleteResult) SetSuccess(x interface{}) {
+	p.Success = x.(*DeleteResponse)
+}
+
+func (p *GatewayDeleteResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GatewayDeleteResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("GatewayDeleteResult(%+v)", *p)
+}
+
+var fieldIDToName_GatewayDeleteResult = map[int16]string{
 	0: "success",
 }
 

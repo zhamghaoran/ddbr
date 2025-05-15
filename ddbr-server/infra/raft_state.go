@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 	"zhamghaoran/ddbr-server/client"
@@ -277,7 +278,8 @@ func (rs *RaftState) UpdateCommitIndex() int64 {
 	// 更新commitIndex
 	if newCommitIndex > rs.CommitIndex {
 		rs.CommitIndex = newCommitIndex
-		log.Log.Infof("Updated commitIndex to %d", newCommitIndex)
+		ctx := context.Background()
+		log.Log.CtxInfof(ctx, "Updated commitIndex to %d", newCommitIndex)
 	}
 
 	return rs.CommitIndex
@@ -295,10 +297,8 @@ func (rs *RaftState) ApplyCommittedLogs() error {
 
 	// 获取需要应用的日志条目
 	logsToApply := make([]*sever.LogEntry, 0)
-	for i := rs.LastApplied + 1; i <= rs.CommitIndex; i++ {
-		if int(i) < len(rs.Logs) {
-			logsToApply = append(logsToApply, rs.Logs[i])
-		}
+	for i := rs.LastApplied + 1; i <= rs.CommitIndex && i < int64(len(rs.Logs)); i++ {
+		logsToApply = append(logsToApply, rs.Logs[i])
 	}
 
 	// 如果没有要应用的日志，返回
@@ -311,17 +311,81 @@ func (rs *RaftState) ApplyCommittedLogs() error {
 	rs.Mu.Unlock()
 
 	// 应用日志到状态机
+	ctx := context.Background()
 	for _, entry := range logsToApply {
 		result, err := ApplyLogToStateMachine(*entry)
 		if err != nil {
-			log.Log.Errorf("Failed to apply log entry %d: %v", entry.Index, err)
+			// 如果是日志已应用的错误，记录并继续，不影响后续日志的应用
+			if strings.Contains(err.Error(), "log entry already applied") {
+				log.Log.CtxWarnf(ctx, "Log entry %d already applied, skipping: %v", entry.Index, err)
+				// 更新LastApplied以跳过此条目
+				rs.SetLastApplied(entry.Index)
+				continue
+			}
+			// 其他错误则返回
+			log.Log.CtxErrorf(ctx, "Failed to apply log entry %d: %v", entry.Index, err)
 			return err
 		}
-		log.Log.Infof("Applied log entry %d to state machine: %s", entry.Index, result)
+		log.Log.CtxInfof(ctx, "Applied log entry %d to state machine: %s", entry.Index, result)
 
 		// 更新lastApplied
 		rs.SetLastApplied(entry.Index)
 	}
 
 	return nil
+}
+
+// GetLastLogIndex 获取最后一个日志的索引
+func (rs *RaftState) GetLastLogIndex() int64 {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+
+	if len(rs.Logs) == 0 {
+		return 0
+	}
+
+	// 返回最后一个日志条目的索引，确保与日志条目中的Index字段一致
+	// 而不是直接使用切片索引
+	return rs.Logs[len(rs.Logs)-1].Index
+}
+
+// AppendLog 追加单个日志条目到日志列表
+func (rs *RaftState) AppendLog(entry *sever.LogEntry) {
+	rs.Mu.Lock()
+	defer rs.Mu.Unlock()
+
+	ctx := context.Background()
+	log.Log.CtxInfof(ctx, "正在追加新日志条目: {Index: %d, Term: %d, Command: %s}",
+		entry.Index, entry.Term, entry.Command)
+
+	// 检查Index是否有效
+	if entry.Index < 1 {
+		log.Log.CtxWarnf(ctx, "追加的日志条目索引无效 (< 1): %d", entry.Index)
+		entry.Index = 1
+		if len(rs.Logs) > 0 {
+			entry.Index = rs.Logs[len(rs.Logs)-1].Index + 1
+		}
+		log.Log.CtxInfof(ctx, "调整日志条目索引为: %d", entry.Index)
+	}
+
+	// 检查日志是否存在冲突
+	for i, e := range rs.Logs {
+		if e.Index == entry.Index {
+			if e.Term != entry.Term {
+				log.Log.CtxWarnf(ctx, "检测到冲突的日志条目，截断后追加，位置: %d", i)
+				// 截断日志
+				rs.Logs = rs.Logs[:i]
+				break
+			} else {
+				// 索引和任期都相同，可能是重复操作，跳过
+				log.Log.CtxInfof(ctx, "忽略重复的日志条目: {Index: %d, Term: %d}",
+					entry.Index, entry.Term)
+				return
+			}
+		}
+	}
+
+	// 追加日志
+	rs.Logs = append(rs.Logs, entry)
+	log.Log.CtxInfof(ctx, "追加日志条目成功，当前日志长度: %d", len(rs.Logs))
 }

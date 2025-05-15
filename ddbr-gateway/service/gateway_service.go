@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	server_client "zhamghaoran/ddbr-gateway/client"
 	"zhamghaoran/ddbr-gateway/infra"
 	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway"
 	clientgateway "zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/gateway/gateway"
+	"zhamghaoran/ddbr-gateway/kitex_gen/ddbr/rpc/sever"
 	"zhamghaoran/ddbr-gateway/log"
 	"zhamghaoran/ddbr-gateway/repo"
 	"zhamghaoran/ddbr-gateway/util"
@@ -185,4 +187,55 @@ func SetLeader(ctx context.Context, req *gateway.SetLeaderReq) (*gateway.SetLead
 
 	resp.SetMasterHost(repo.GetLeaderHost())
 	return resp, nil
+}
+func Get(ctx context.Context, req *gateway.GetRequest) (*gateway.GetResponse, error) {
+	resp, err := server_client.GetServerClient().Get(ctx, &sever.GetReq{
+		Key: req.Key,
+	})
+	if err != nil {
+		log.Log.Errorf("rpc call server get error: %v", err)
+		return nil, err
+	}
+	return &gateway.GetResponse{
+		Val: resp.Value,
+		Common: &common.Common{
+			RespCode: resp.Common.RespCode,
+			Message:  resp.Common.Message,
+		},
+	}, nil
+}
+func Set(ctx context.Context, req *gateway.SetRequest) (*gateway.SetResponse, error) {
+	rpcResp, err := server_client.GetServerClient().Set(ctx, &sever.SetReq{
+		Key:   req.Key,
+		Value: req.Val,
+	})
+	if err != nil {
+		log.Log.Errorf("rpc call server set error: %v", err)
+		return nil, err
+	}
+	return &gateway.SetResponse{
+		Common: &common.Common{
+			RespCode: rpcResp.Common.RespCode,
+			Message:  rpcResp.Message,
+		},
+	}, nil
+}
+
+// Delete 实现删除键值对的方法
+func Delete(ctx context.Context, req *gateway.DeleteRequest) (*gateway.DeleteResponse, error) {
+	rpcResp, err := server_client.GetServerClient().Delete(ctx, &sever.DeleteReq{
+		Key: req.Key,
+	})
+	if err != nil {
+		log.Log.Errorf("rpc call server delete error: %v", err)
+		return nil, err
+	}
+
+	// 构建响应
+	return &gateway.DeleteResponse{
+		Common: &common.Common{
+			RespCode: rpcResp.Common.RespCode,
+			Message:  rpcResp.Message,
+		},
+	}, nil
 }
