@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net"
 	"os"
@@ -55,6 +56,23 @@ func startServer() {
 	// 获取配置
 	config := configs.GetConfig()
 	port := config.Port
+
+	// 如果是Follower节点，启动心跳检测
+	if !config.IsMaster {
+		log.Log.Infof("Follower节点启动心跳检测，监控Leader: %s", config.MasterAddr)
+
+		// 使用新状态机替代旧的RaftState
+		stateMachine := infra.GetRaftStateMachine()
+
+		// 创建关闭通道
+		closeCh := make(chan int)
+
+		// 启动心跳检测
+		go stateMachine.ExpiredTimer(context.Background(), config.MasterAddr, closeCh)
+
+		// 将关闭通道保存，以便在服务关闭时使用
+		// 可以通过全局变量或其他方式保存
+	}
 
 	addr, _ := net.ResolveTCPAddr("tcp", "0.0.0.0:"+port)
 	code := thrift.NewThriftCodecWithConfig(thrift.FrugalRead | thrift.FrugalWrite)

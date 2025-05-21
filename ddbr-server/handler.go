@@ -16,7 +16,7 @@ func (s *ServerImpl) RequestVote(ctx context.Context, req *sever.RequestVoteReq)
 
 // AppendEntries implements the ServerImpl interface.
 func (s *ServerImpl) AppendEntries(ctx context.Context, req *sever.AppendEntriesReq) (resp *sever.AppendEntriesResp, err error) {
-	return service.AppendEntries(ctx, req)
+	return service.HandleAppendEntries(ctx, req)
 }
 
 // HeartBeat implements the ServerImpl interface.

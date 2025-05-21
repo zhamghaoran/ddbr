@@ -10,71 +10,39 @@ import (
 )
 
 func RequestVote(ctx context.Context, req *sever.RequestVoteReq) (resp *sever.RequestVoteResp, err error) {
-	resp = sever.NewRequestVoteResp()
-	resp.Common = &common.Common{
-		RespCode: 0,
-		Message:  "success",
+	log.Log.CtxInfof(ctx, "接收到投票请求: %+v", req)
+
+	// 使用状态机处理投票请求
+	stateMachine := infra.GetRaftStateMachine()
+	resp, err = stateMachine.RequestVote(ctx, req)
+
+	// 记录投票结果
+	if resp != nil {
+		log.Log.CtxInfof(ctx, "投票请求处理结果: %+v", resp)
+	} else {
+		log.Log.CtxErrorf(ctx, "投票请求处理失败: %v", err)
+		// 生成默认的错误响应
+		resp = &sever.RequestVoteResp{
+			Common: &common.Common{
+				RespCode: 1,
+				Message:  "internal error: " + err.Error(),
+			},
+			VoteGranted: false,
+		}
 	}
 
-	// 获取Raft状态
-	raftState := infra.GetRaftState()
+	return resp, err
+}
 
-	// 加锁保护并发访问
-	raftState.Mu.Lock()
-	defer raftState.Mu.Unlock()
+// BeginVote 启动选举过程
+func BeginVote(ctx context.Context) {
+	log.Log.CtxInfof(ctx, "手动触发选举过程")
 
-	// 1. 如果请求中的任期小于当前任期，拒绝投票
-	if req.Term < raftState.CurrentTerm {
-		resp.Term = raftState.CurrentTerm
-		resp.VoteGranted = false
-		resp.Common.Message = "term is smaller than current term"
-		return resp, nil
-	}
+	// 获取状态机并触发选举
+	stateMachine := infra.GetRaftStateMachine()
+	stateMachine.BeginVote()
 
-	// 2. 如果请求中的任期大于当前任期，更新当前任期，重置投票状态
-	if req.Term > raftState.CurrentTerm {
-		raftState.CurrentTerm = req.Term
-		raftState.VotedFor = -1 // 重置投票状态
-	}
-
-	// 设置响应的任期为当前任期
-	resp.Term = raftState.CurrentTerm
-
-	// 3. 检查是否已经投票给其他候选人
-	if raftState.VotedFor != -1 && raftState.VotedFor != req.CandidateId {
-		resp.VoteGranted = false
-		resp.Common.Message = "already voted for another candidate"
-		return resp, nil
-	}
-
-	// 4. 检查日志完整性
-	// 获取本节点的最后日志条目
-	var lastLogTerm int64 = 0
-	var lastLogIndex int64 = 0
-	if len(raftState.Logs) > 0 {
-		lastLog := raftState.Logs[len(raftState.Logs)-1]
-		lastLogTerm = lastLog.Term
-		lastLogIndex = lastLog.Index
-	}
-
-	// 如果候选人的日志不够新（任期较小或任期相同但索引较小），拒绝投票
-	logOK := (req.LastLogTerm > lastLogTerm) ||
-		(req.LastLogTerm == lastLogTerm && req.LastLogIndex >= lastLogIndex)
-
-	if !logOK {
-		resp.VoteGranted = false
-		resp.Common.Message = "candidate's log is not up-to-date"
-		return resp, nil
-	}
-
-	// 5. 授予投票
-	raftState.VotedFor = req.CandidateId
-	resp.VoteGranted = true
-
-	// 6. 持久化状态（这里应该调用持久化方法，这里简化处理）
-	// TODO: persistRaftState()
-
-	return resp, nil
+	log.Log.CtxInfof(ctx, "选举过程已触发")
 }
 
 // SyncLogs 处理从节点的日志同步请求 - 提供给gRPC服务调用

@@ -1,7 +1,9 @@
 package client
 
 import (
+	"strings"
 	"sync"
+	"time"
 	"zhamghaoran/ddbr-server/configs"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/gateway/gateway"
 	"zhamghaoran/ddbr-server/kitex_gen/ddbr/rpc/sever/server"
@@ -34,14 +36,28 @@ func GetLeaderClient(leaderHost string) server.Client {
 		if leaderHost == "" {
 			log.Log.Warn("Leader host is empty, using gateway host")
 			leaderHost = configs.GetGatewayHost()
+			if leaderHost == "" {
+				log.Log.Error("无法获取有效的Leader地址")
+				return nil
+			}
 		}
+	}
+
+	// 检查主机是否包含端口，如果不包含则尝试使用配置的端口
+	if !strings.Contains(leaderHost, ":") {
+		port := configs.GetConfig().Port
+		if port == "" {
+			port = "8080" // 默认端口
+		}
+		leaderHost = leaderHost + ":" + port
+		log.Log.Infof("补充端口信息，完整地址: %s", leaderHost)
 	}
 
 	// 检查缓存
 	clientMutex.RLock()
-	if client, ok := clientCache[leaderHost]; ok {
+	if c, ok := clientCache[leaderHost]; ok {
 		clientMutex.RUnlock()
-		return client
+		return c
 	}
 	clientMutex.RUnlock()
 
@@ -50,16 +66,23 @@ func GetLeaderClient(leaderHost string) server.Client {
 	defer clientMutex.Unlock()
 
 	// 再次检查缓存（避免竞态条件）
-	if client, ok := clientCache[leaderHost]; ok {
-		return client
+	if c, ok := clientCache[leaderHost]; ok {
+		return c
 	}
 
-	// 使用端口配置，如果没有指定则使用默认端口
-	port := ":8080"
-	serverClient := server.MustNewClient("server",
-		client.WithHostPorts(leaderHost+port),
+	log.Log.Infof("创建新的Leader客户端连接，地址: %s", leaderHost)
+
+	// 创建新客户端连接
+	serverClient, err := server.NewClient("server",
+		client.WithHostPorts(leaderHost),
 		client.WithPayloadCodec(thrift.NewThriftCodecWithConfig(thrift.FrugalRead|thrift.FrugalWrite)),
-		client.WithTransportProtocol(transport.Framed))
+		client.WithTransportProtocol(transport.Framed),
+		client.WithConnectTimeout(3*time.Second)) // 增加连接超时
+
+	if err != nil {
+		log.Log.Errorf("创建Leader客户端失败: %s, 错误: %v", leaderHost, err)
+		return nil
+	}
 
 	// 添加到缓存
 	clientCache[leaderHost] = serverClient

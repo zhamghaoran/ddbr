@@ -1,0 +1,87 @@
+version: '3'
+
+services:
+  redis-master-1:
+    image: redis:7.0
+    container_name: redis-master-1
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/master-1:/data
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-master-2:
+    image: redis:7.0
+    container_name: redis-master-2
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./redis/master-2:/data
+    command: redis-server --port 6380 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-master-3:
+    image: redis:7.0
+    container_name: redis-master-3
+    ports:
+      - "6381:6381"
+    volumes:
+      - ./redis/master-3:/data
+    command: redis-server --port 6381 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-slave-1:
+    image: redis:7.0
+    container_name: redis-slave-1
+    ports:
+      - "6382:6382"
+    volumes:
+      - ./redis/slave-1:/data
+    command: redis-server --port 6382 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-slave-2:
+    image: redis:7.0
+    container_name: redis-slave-2
+    ports:
+      - "6383:6383"
+    volumes:
+      - ./redis/slave-2:/data
+    command: redis-server --port 6383 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-slave-3:
+    image: redis:7.0
+    container_name: redis-slave-3
+    ports:
+      - "6384:6384"
+    volumes:
+      - ./redis/slave-3:/data
+    command: redis-server --port 6384 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - redis-net
+
+  redis-cluster-init:
+    image: redis:7.0
+    container_name: redis-cluster-init
+    depends_on:
+      - redis-master-1
+      - redis-master-2
+      - redis-master-3
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    command: >
+      bash -c "sleep 10 && redis-cli --cluster create redis-master-1:6379 redis-master-2:6380 redis-master-3:6381 redis-slave-1:6382 redis-slave-2:6383 redis-slave-3:6384 --cluster-replicas 1 --cluster-yes"
+    networks:
+      - redis-net
+
+networks:
+  redis-net:
+    driver: bridge 

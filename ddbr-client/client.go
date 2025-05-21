@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"github.com/cloudwego/kitex/pkg/remote/codec/thrift"
 	"github.com/cloudwego/kitex/transport"
+	"github.com/go-redis/redis/v8"
+	"math/rand"
+	"strconv"
 	"time"
 	"zhamghaoran/ddbr-client/kitex_gen/ddbr/rpc/common"
 	"zhamghaoran/ddbr-client/kitex_gen/ddbr/rpc/gateway"
@@ -36,6 +39,14 @@ func NewClientManager(gatewayAddr string) gw.Client {
 	return c
 }
 
+func connectToRedisCluster() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // Redis服务器地址
+		Password: "",               // 无密码
+		DB:       0,
+	})
+
+}
 func main() {
 	// 命令行参数
 	gatewayAddr := "localhost:8080"
@@ -47,40 +58,41 @@ func main() {
 	fmt.Printf("连接到网关: %s\n", gatewayAddr)
 
 	// 创建上下文
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	password := "799972173318"
-	respSet, err := clientManager.Set(ctx, &gateway.SetRequest{
-		Key:      "init_key1",
-		Val:      "test1",
-		Password: &common.Password{Password: password},
-	})
-	if err != nil {
-		panic(err)
+	ctx := context.Background()
+	password := "235254608168"
+	// 初始化48 个key
+	for i := 0; i <= 4096; i++ {
+		_, _ = clientManager.Set(ctx, &gateway.SetRequest{
+			Key:      "init_key" + strconv.Itoa(i),
+			Val:      "test1",
+			Password: &common.Password{Password: password},
+		})
 	}
-	fmt.Printf("set resp is %+v\n", respSet)
-	resp, err := clientManager.Get(ctx, &gateway.GetRequest{
-		Key:      "init_key1",
-		Password: &common.Password{Password: password},
-	})
-	if err != nil {
-		panic(err)
+	beginTime := time.Now()
+	// 测试读写100w 次，统计耗时
+	for i := 1; i <= 100000; i++ {
+		_, err := clientManager.Get(ctx, &gateway.GetRequest{
+			Key:      "init_key" + strconv.Itoa(rand.Intn(48)),
+			Password: &common.Password{Password: password},
+		})
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
-	fmt.Printf("第一次get %+v\n", resp)
-	_, err = clientManager.Delete(ctx, &gateway.DeleteRequest{
-		Key:      "init_key1",
-		Password: &common.Password{Password: password},
-	})
-	if err != nil {
-		panic(err)
+	costTime := time.Since(beginTime)
+	fmt.Printf("ddbr_costTime: %s\n", costTime)
+	redisClient := connectToRedisCluster()
+	for i := 0; i <= 4096; i++ {
+		if err := redisClient.Set(ctx, "init_key"+strconv.Itoa(i), "test1", -1).Err(); err != nil {
+			fmt.Printf("err is :%v", err.Error())
+		}
 	}
-	resp1, err := clientManager.Get(ctx, &gateway.GetRequest{
-		Key:      "init_key1",
-		Password: &common.Password{Password: password},
-	})
-	if err != nil {
-		panic(err)
+	redisStartTime := time.Now()
+	for i := 1; i <= 100000; i++ {
+		if err := redisClient.Get(ctx, "init_key"+strconv.Itoa(rand.Intn(48))).Err(); err != nil {
+			fmt.Printf("err is :%v", err.Error())
+		}
 	}
-	fmt.Printf("第二次get%+v\n", resp1)
-
+	costTime = time.Since(redisStartTime)
+	fmt.Printf("redis_costTime: %s\n", costTime)
 }

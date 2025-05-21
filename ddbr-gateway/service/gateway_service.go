@@ -189,7 +189,7 @@ func SetLeader(ctx context.Context, req *gateway.SetLeaderReq) (*gateway.SetLead
 	return resp, nil
 }
 func Get(ctx context.Context, req *gateway.GetRequest) (*gateway.GetResponse, error) {
-	resp, err := server_client.GetServerClient().Get(ctx, &sever.GetReq{
+	resp, err := server_client.MustGetServerClient().Get(ctx, &sever.GetReq{
 		Key: req.Key,
 	})
 	if err != nil {
@@ -205,7 +205,7 @@ func Get(ctx context.Context, req *gateway.GetRequest) (*gateway.GetResponse, er
 	}, nil
 }
 func Set(ctx context.Context, req *gateway.SetRequest) (*gateway.SetResponse, error) {
-	rpcResp, err := server_client.GetServerClient().Set(ctx, &sever.SetReq{
+	rpcResp, err := server_client.MustGetServerClient().Set(ctx, &sever.SetReq{
 		Key:   req.Key,
 		Value: req.Val,
 	})
@@ -223,7 +223,7 @@ func Set(ctx context.Context, req *gateway.SetRequest) (*gateway.SetResponse, er
 
 // Delete 实现删除键值对的方法
 func Delete(ctx context.Context, req *gateway.DeleteRequest) (*gateway.DeleteResponse, error) {
-	rpcResp, err := server_client.GetServerClient().Delete(ctx, &sever.DeleteReq{
+	rpcResp, err := server_client.MustGetServerClient().Delete(ctx, &sever.DeleteReq{
 		Key: req.Key,
 	})
 	if err != nil {
