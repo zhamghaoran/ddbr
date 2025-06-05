@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于Raft算法的分布式数据库构建 - 毕业答辩</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/highlight/monokai.min.css">
+    
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        .reveal .slides section {
+            text-align: left;
+        }
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+            text-align: center;
+        }
+        .center {
+            text-align: center;
+        }
+        .reveal pre {
+            font-size: 0.8em;
+            box-shadow: none;
+        }
+        .reveal table {
+            margin: auto;
+            font-size: 0.8em;
+        }
+        .reveal table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }
+        .reveal table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        .reveal .progress {
+            color: #2c3e50;
+        }
+        .small-text {
+            font-size: 0.8em;
+        }
+        .architecture-diagram {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- 标题页 -->
+            <section data-background-color="#2c3e50">
+                <h1 style="color: white;">基于Raft算法的分布式数据库构建</h1>
+                <h3 style="color: #ecf0f1;">毕业设计答辩</h3>
+                <br><br>
+                <p style="color: white;" class="center">
+                    <strong>答辩人：</strong>张皓然<br>
+                    <strong>学号：</strong>202131061326<br>
+                    <strong>指导教师：</strong>蒋欣岑 讲师
+                </p>
+            </section>
+
+            <!-- 目录 -->
+            <section>
+                <h2>目录</h2>
+                <ol style="font-size: 1.1em; line-height: 1.8;">
+                    <li>研究背景与目标</li>
+                    <li>相关理论基础</li>
+                    <li>Raft算法核心机制</li>
+                    <li>系统设计与架构</li>
+                    <li>功能实现与测试</li>
+                    <li>性能分析</li>
+                    <li>总结与展望</li>
+                </ol>
+            </section>
+
+            <!-- 研究背景 -->
+            <section>
+                <h2>1. 研究背景</h2>
+                <h3>大数据时代的挑战</h3>
+                <div style="display: flex; justify-content: space-around; margin-top: 40px;">
+                    <div style="flex: 1; margin: 20px;">
+                        <h4 class="center"><span class="emoji">📈</span> 数据爆炸式增长</h4>
+                        <ul>
+                            <li>传统单机数据库面临容量、性能瓶颈</li>
+                            <li>分布式架构成为必然选择</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1; margin: 20px;">
+                        <h4 class="center"><span class="emoji">🔧</span> 核心技术难题</h4>
+                        <ul>
+                            <li>如何在分布式环境中保证数据一致性？</li>
+                            <li>如何平衡一致性和可用性？</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 研究目标 -->
+            <section>
+                <h2>2. 研究目标</h2>
+                <h3>构建基于Raft的分布式KV数据库</h3>
+                <div style="margin-top: 30px;">
+                    <h4>主要目标：</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>✅ 实现<span class="highlight">强一致性</span>的数据存储</li>
+                        <li>✅ 保证系统<span class="highlight">高可用性</span></li>
+                        <li>✅ 支持节点故障<span class="highlight">自动恢复</span></li>
+                        <li>✅ 提供<span class="highlight">简洁的API</span>接口</li>
+                    </ul>
+                    <h4 style="margin-top: 30px;">技术路线：</h4>
+                    <ul>
+                        <li>采用Raft共识算法</li>
+                        <li>Go语言开发</li>
+                        <li>Kitex RPC框架</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- CAP理论 -->
+            <section>
+                <h2>3. 理论基础 - CAP定理</h2>
+                <div class="center" style="margin: 40px 0;">
+                    <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="150" cy="100" r="80" fill="#3498db" opacity="0.5"/>
+                        <circle cx="250" cy="100" r="80" fill="#e74c3c" opacity="0.5"/>
+                        <circle cx="200" cy="180" r="80" fill="#2ecc71" opacity="0.5"/>
+                        <text x="150" y="100" text-anchor="middle" font-size="20" font-weight="bold" fill="white">C</text>
+                        <text x="250" y="100" text-anchor="middle" font-size="20" font-weight="bold" fill="white">A</text>
+                        <text x="200" y="180" text-anchor="middle" font-size="20" font-weight="bold" fill="white">P</text>
+                    </svg>
+                </div>
+                <h4>CAP三要素</h4>
+                <ul>
+                    <li><strong>C (Consistency)</strong>: 一致性</li>
+                    <li><strong>A (Availability)</strong>: 可用性</li>
+                    <li><strong>P (Partition tolerance)</strong>: 分区容错性</li>
+                </ul>
+                <p class="center" style="margin-top: 30px; font-size: 1.1em;">
+                    <strong>本系统定位：CP系统，优先保证数据一致性</strong>
+                </p>
+            </section>
+
+            <!-- 为什么选择Raft -->
+            <section>
+                <h2>4. 为什么选择Raft？</h2>
+                <h3>主流共识算法对比</h3>
+                <table style="margin-top: 30px;">
+                    <thead>
+                        <tr>
+                            <th>算法</th>
+                            <th>复杂度</th>
+                            <th>可理解性</th>
+                            <th>工程实现</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Paxos</td>
+                            <td>高</td>
+                            <td>困难</td>
+                            <td>复杂</td>
+                        </tr>
+                        <tr>
+                            <td>Raft</td>
+                            <td>中</td>
+                            <td><strong class="highlight">简单</strong></td>
+                            <td><strong class="highlight">容易</strong></td>
+                        </tr>
+                        <tr>
+                            <td>ZAB</td>
+                            <td>中</td>
+                            <td>一般</td>
+                            <td>一般</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4 style="margin-top: 30px;">Raft的优势</h4>
+                <ul>
+                    <li>✨ 算法清晰易懂</li>
+                    <li>✨ 模块化设计</li>
+                    <li>✨ 广泛的工业应用（etcd、TiKV等）</li>
+                </ul>
+            </section>
+
+            <!-- Raft核心机制 -->
+            <section>
+                <h2>5. Raft算法核心机制</h2>
+                <h3>三种节点角色</h3>
+                <div class="architecture-diagram" style="margin-top: 30px;">
+                    <pre style="background: none; box-shadow: none;">
+Leader（领导者）
+  ├─ 处理所有客户端请求
+  ├─ 管理日志复制
+  └─ 发送心跳维持权威
+
+Follower（跟随者）
+  ├─ 被动接收日志
+  └─ 响应Leader请求
+
+Candidate（候选者）
+  └─ 选举过程中的临时状态
+                    </pre>
+                </div>
+            </section>
+
+            <!-- Leader选举 -->
+            <section>
+                <h2>6. Leader选举机制</h2>
+                <h3>选举触发条件</h3>
+                <ol>
+                    <li>系统初始化启动</li>
+                    <li>Leader节点故障</li>
+                    <li>网络分区恢复</li>
+                </ol>
+                <h3 style="margin-top: 40px;">关键设计</h3>
+                <ul>
+                    <li><strong>随机超时</strong>：避免选票分散</li>
+                    <li><strong>任期机制</strong>：识别过期信息</li>
+                </ul>
+            </section>
+
+            <!-- 日志复制 -->
+            <section>
+                <h2>7. 日志复制流程</h2>
+                <h3>复制步骤</h3>
+                <ol style="font-size: 1.1em; line-height: 2;">
+                    <li>客户端发送写请求到Leader</li>
+                    <li>Leader追加日志并复制到Follower</li>
+                    <li>多数节点确认后提交</li>
+                    <li>应用到状态机并返回结果</li>
+                </ol>
+                <div class="center" style="margin-top: 30px;">
+                    <p class="highlight">基于多数派的机制保证数据不丢失</p>
+                </div>
+            </section>
+
+            <!-- 系统架构 -->
+            <section>
+                <h2>8. 系统架构设计</h2>
+                <h3>分层架构</h3>
+                <div class="architecture-diagram">
+                    <pre style="font-size: 0.9em;">
+┌─────────────────────────────┐
+│      接口层 (API/SDK)        │
+├─────────────────────────────┤
+│      服务层 (业务逻辑)       │
+├─────────────────────────────┤
+│      共识层 (Raft实现)       │
+├─────────────────────────────┤
+│      存储层 (持久化)         │
+└─────────────────────────────┘
+                    </pre>
+                </div>
+                <h4>技术栈</h4>
+                <ul>
+                    <li><strong>开发语言</strong>: Go</li>
+                    <li><strong>RPC框架</strong>: Kitex + Thrift</li>
+                    <li><strong>存储引擎</strong>: 内存KV + WAL</li>
+                </ul>
+            </section>
+
+            <!-- 功能实现 -->
+            <section>
+                <h2>9. 核心功能实现</h2>
+                <h3>基础KV操作</h3>
+                <pre><code class="language-go">
+// 设置键值对
+SET(key, value)
+
+// 获取值
+GET(key) -> value
+
+// 删除键
+DELETE(key)
+                </code></pre>
+                <h3 style="margin-top: 40px;">集群管理功能</h3>
+                <ul>
+                    <li>✅ 节点动态加入/退出</li>
+                    <li>✅ 自动故障检测与恢复</li>
+                    <li>✅ 日志同步与一致性保证</li>
+                </ul>
+            </section>
+
+            <!-- Leader选举测试 -->
+            <section>
+                <h2>10. 功能测试展示</h2>
+                <h3>1. Leader选举测试</h3>
+                <div style="background: #f8f8f8; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                    <p><strong>测试场景</strong>：关闭Leader节点</p>
+                    <p><strong>测试结果</strong>：Follower 2成功当选新Leader</p>
+                </div>
+                <p class="center highlight">故障恢复时间：秒级完成</p>
+            </section>
+
+            <!-- 日志同步测试 -->
+            <section>
+                <h2>11. 功能测试展示</h2>
+                <h3>2. 日志同步测试</h3>
+                <div style="background: #f8f8f8; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                    <p><strong>测试步骤</strong>：</p>
+                    <ol>
+                        <li>Leader执行SET操作</li>
+                        <li>观察Follower日志输出</li>
+                        <li>验证数据一致性</li>
+                    </ol>
+                </div>
+                <p class="center highlight">结果：所有节点数据保持一致 ✅</p>
+            </section>
+
+            <!-- 性能分析 -->
+            <section>
+                <h2>12. 性能测试分析</h2>
+                <h3>与Redis性能对比（10万次读操作）</h3>
+                <table style="margin-top: 30px;">
+                    <thead>
+                        <tr>
+                            <th>负载规模</th>
+                            <th>DDBR耗时</th>
+                            <th>Redis耗时</th>
+                            <th>性能比</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>48 keys</td>
+                            <td>35.39s</td>
+                            <td>12.16s</td>
+                            <td>34%</td>
+                        </tr>
+                        <tr>
+                            <td>512 keys</td>
+                            <td>39.32s</td>
+                            <td>12.47s</td>
+                            <td>32%</td>
+                        </tr>
+                        <tr>
+                            <td>4096 keys</td>
+                            <td>36.80s</td>
+                            <td>11.81s</td>
+                            <td>32%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4 style="margin-top: 30px;">分析</h4>
+                <ul>
+                    <li>性能差距主要源于<span class="highlight">一致性保证开销</span></li>
+                    <li>但获得了<span class="highlight">强一致性</span>和<span class="highlight">高可用性</span></li>
+                    <li>符合CAP理论的权衡</li>
+                </ul>
+            </section>
+
+            <!-- 系统优势 -->
+            <section>
+                <h2>13. 系统优势与创新点</h2>
+                <h3>技术优势</h3>
+                <ul style="line-height: 2;">
+                    <li>🚀 <strong>强一致性保证</strong>：基于Raft算法</li>
+                    <li>🛡️ <strong>高可用性</strong>：自动故障恢复</li>
+                    <li>📦 <strong>模块化设计</strong>：易于扩展维护</li>
+                    <li>⚡ <strong>高性能通信</strong>：Kitex RPC框架</li>
+                </ul>
+                <h3 style="margin-top: 40px;">创新点</h3>
+                <ul>
+                    <li>实现了完整的Raft核心机制</li>
+                    <li>优化了日志复制性能</li>
+                    <li>提供了多种一致性级别的读取策略</li>
+                </ul>
+            </section>
+
+            <!-- 总结 -->
+            <section>
+                <h2>14. 总结</h2>
+                <h3>完成的工作</h3>
+                <ul style="line-height: 2;">
+                    <li>✅ 深入研究了Raft共识算法原理</li>
+                    <li>✅ 设计并实现了分布式KV数据库系统</li>
+                    <li>✅ 实现了Leader选举、日志复制等核心功能</li>
+                    <li>✅ 完成了功能测试和性能评估</li>
+                </ul>
+                <h3 style="margin-top: 40px;">达成的目标</h3>
+                <ul>
+                    <li>构建了一个<strong>可用的</strong>分布式存储系统</li>
+                    <li>在<strong>一致性</strong>和<strong>可用性</strong>间找到平衡</li>
+                    <li>为分布式系统开发提供了<strong>实践参考</strong></li>
+                </ul>
+            </section>
+
+            <!-- 展望 -->
+            <section>
+                <h2>15. 未来展望</h2>
+                <h3>性能优化</h3>
+                <ul>
+                    <li>实现ReadIndex和LeaderLease机制</li>
+                    <li>引入批量处理和并行复制</li>
+                    <li>优化网络传输和序列化</li>
+                </ul>
+                <h3 style="margin-top: 30px;">功能扩展</h3>
+                <ul>
+                    <li>增加事务支持</li>
+                    <li>实现数据分片</li>
+                    <li>支持更多数据类型</li>
+                </ul>
+                <h3 style="margin-top: 30px;">可靠性提升</h3>
+                <ul>
+                    <li>完善成员变更机制</li>
+                    <li>增强安全机制</li>
+                    <li>支持跨数据中心部署</li>
+                </ul>
+            </section>
+
+            <!-- 结束页 -->
+            <section data-background-color="#2c3e50">
+                <h1 style="color: white;">谢谢！</h1>
+                <h3 style="color: #ecf0f1;">请各位老师批评指正</h3>
+                <br><br>
+                <p style="color: white;" class="center">
+                    <strong>答辩人：</strong>张皓然<br>
+                    <strong>学号：</strong>202131061326<br>
+                    <strong>指导教师：</strong>蒋欣岑 讲师<br><br>
+                    项目源码：github.com/xxx/ddbr
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/highlight/highlight.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            controls: true,
+            progress: true,
+            center: false,
+            transition: 'slide',
+            plugins: [ RevealHighlight ]
+        });
+    </script>
+</body>
+</html> 
